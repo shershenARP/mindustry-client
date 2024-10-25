@@ -14,10 +14,16 @@ import mindustry.game.*;
 import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.*;
+import mindustry.world.blocks.payloads.Constructor;
+import mindustry.world.blocks.payloads.PayloadRouter;
+import mindustry.world.blocks.payloads.PayloadSource;
+import mindustry.world.blocks.units.UnitFactory;
 
 import static mindustry.Vars.*;
 
-/** Displays the configuration UI for build plans before they have been placed. */
+/**
+ * Displays the configuration UI for build plans before they have been placed.
+ */
 public class PlanConfigFragment {
     Table table = new Table();
     BuildPlan selected;
@@ -40,6 +46,8 @@ public class PlanConfigFragment {
         table.clear();
 
         //Only allows configuring content (items, liquids, units, blocks)
+        //Each block manages its own configs, but that function requires an existing build
+        //Try to guess it
         var options = new Seq<UnlockableContent>();
         if (block.configurations.containsKey(Item.class)) {
             options.add(content.items());
@@ -47,10 +55,18 @@ public class PlanConfigFragment {
         if (block.configurations.containsKey(Liquid.class)) {
             options.add(content.liquids());
         }
-        if (block.configurations.containsKey(UnitType.class)) {
-            options.add(content.units());
+        if (block instanceof UnitFactory f) {
+            options.add(f.plans.map(p -> p.unit).retainAll(u -> !u.isBanned()));
+        } else if (block.configurations.containsKey(UnitType.class)) {
+            options.add(content.units().retainAll(u -> !u.isBanned()));
         }
-        if (block.configurations.containsKey(Block.class)) {
+        if (block instanceof Constructor b) {
+            options.add(content.blocks().select(b::canProduce));
+        } else if (block instanceof PayloadSource b) {
+            options.add(content.blocks().select(b::canProduce));
+        } else if (block instanceof PayloadRouter b) {
+            options.add(content.blocks().select(b::canSort));
+        } else if (block.configurations.containsKey(Block.class)) {
             options.add(content.blocks());
         }
         if (options.isEmpty()) return;
