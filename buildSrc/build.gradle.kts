@@ -1,3 +1,5 @@
+
+import org.jetbrains.kotlin.gradle.dsl.*
 import java.io.File
 import java.util.*
 
@@ -17,9 +19,7 @@ dependencies {
 }
 
 // I swear gradle is the worst
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java) {
-    kotlinOptions.jvmTarget = "16"
-}
+kotlin.compilerOptions.jvmTarget.set(JvmTarget.JVM_16)
 
 tasks.withType(org.gradle.api.tasks.compile.JavaCompile::class.java){
     targetCompatibility = "16"
