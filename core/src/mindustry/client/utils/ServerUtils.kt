@@ -42,6 +42,8 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
             else super.run(*args)
         }
     }, votekickString = "Type[orange] /vote <y/n>[] to vote.") {
+        val tdAgree: Cmd = Cmd("/agree", 0)
+        val tdString: String = "Type [green]/agree[] to vote!"
         override fun handleBan(p: Player) {
             ui.showTextInput("@client.banreason.title", "@client.banreason.body", "Griefing.") { reason ->
                 val id = p.trace?.uuid ?: p.serverID
@@ -55,6 +57,12 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
         }
 
         override fun adminui() = player.admin || ClientVars.rank >= 5
+        override fun handleVoteButtons(msg: ChatMessage) {
+            super.handleVoteButtons(msg)
+            if (msg.sender == null && CustomMode.tower_defense() && tdString in msg.message) {
+                msg.addButton(tdAgree.str, tdAgree::invoke)
+            }
+        }
     },
     phoenix("Phoenix Network", null, Cmd("/w"), Cmd("/rtv"), Cmd("/freeze", 9), votekickString = "Type [cyan]/vote y"),
     korea("Korea", ghost = true),
@@ -277,6 +285,7 @@ enum class CustomMode {
             (foreshadow as ItemTurret).ammoTypes.put(Items.surgeAlloy, foreshadowBulletVanilla)
         }
     },
+    tower_defense,
     defense
     ;
 
@@ -291,7 +300,7 @@ enum class CustomMode {
         init {
             Events.on(WorldLoadEvent::class.java) {
                 val modeName = if (!net.client() || ui.join.lastHost?.modeName?.isBlank() != false) state.rules.modeName?.lowercase() else ui.join.lastHost.modeName.lowercase()
-                current = entries.find { it.name == modeName } ?: none
+                current = entries.find { it.name == modeName?.replace(" ", "_") } ?: none
             }
 
             Events.on(MenuReturnEvent::class.java) {
