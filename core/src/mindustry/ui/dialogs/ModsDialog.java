@@ -52,6 +52,20 @@ public class ModsDialog extends BaseDialog{
     private boolean autoUpdating; // Whether mods are currently being auto updated
     private float scroll = 0f;
 
+    private Runnable autoUpdaterHandler = () -> { // RUN THIS ON THE MAIN THREAD
+        if (++prompted == expected) { // FINISHME: Awful
+            autoUpdating = false;
+            if (mods.requiresReload()){
+                if (Core.settings.getInt("modautoupdate") == 2) {
+                    ClientUtils.restartGame();
+                    reload();
+                }
+                new Toast(5f).add("[accent]Mod updates found, they will be installed after restart.");
+            } else new Toast(5f).add("[accent]No mod updates found.");
+        }
+    };
+    private ObjectMap<String, Runnable> onSuccess = new ObjectMap();
+
     public ModsDialog(){
         super("@mods");
         addCloseButton();
@@ -115,7 +129,7 @@ public class ModsDialog extends BaseDialog{
                 for (Mods.LoadedMod mod : mods.mods.copy().shuffle()) { // Use shuffled mod list, if the user has more than 30 active mods, this will ensure that each is checked at least somewhat frequently
                     if (!mod.enabled() || mod.getRepo() == null || !settings.getBool(mod.autoUpdateString(), true)) continue;
                     if (expected++ >= 30) continue; // Only make up to 30 api requests
-
+                    onSuccess.put(mod.getRepo(), autoUpdaterHandler);
                     githubImportMod(mod.getRepo(), mod.isJava(), null, mod.meta.version); // FINISHME: Handle deletion of old file on shutdown
                 }
             } else Log.debug("Not updating mods, updated too recently / auto update is disabled / no enabled mods.");
@@ -691,18 +705,13 @@ public class ModsDialog extends BaseDialog{
             modError(e);
         }
 
-        Core.app.post(() -> { // THIS DOES NOT RUN ON THE MAIN THREAD OTHERWISE
-            if (++prompted == expected) { // FINISHME: Awful
-                autoUpdating = false;
-                if (mods.requiresReload()){
-                    if (Core.settings.getInt("modautoupdate") == 2) {
-                        ClientUtils.restartGame();
-                        reload();
-                    }
-                    new Toast(5f).add("[accent]Mod updates found, they will be installed after restart.");
-                } else new Toast(5f).add("[accent]No mod updates found.");
-            }
-        });
+        importSuccess(repo);
+    }
+
+    private void importSuccess(String repo){
+        var func = onSuccess.remove(repo);
+        if(func == null) return;
+        Core.app.post(() -> func.run());
     }
 
     private void importFail(Throwable t){
@@ -716,6 +725,11 @@ public class ModsDialog extends BaseDialog{
 
     private void githubImportMod(String repo, boolean isJava, @Nullable String release){
         githubImportMod(repo, isJava, release, null);
+    }
+
+    public void githubImportMod(String repo, boolean isJava, @Nullable String release, @Nullable String prevVersion, Runnable onSuccessRunnable){
+        onSuccess.put(repo, onSuccessRunnable);
+        githubImportMod(repo, isJava, release, prevVersion);
     }
 
     public void githubImportMod(String repo, boolean isJava, @Nullable String release, @Nullable String prevVersion){
