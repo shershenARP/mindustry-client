@@ -12,7 +12,7 @@ import mindustry.ui.*
 import mindustry.ui.dialogs.*
 
 class ClajManagerDialog : BaseDialog("@client.claj.manage") {
-    var serverIP = "148.251.184.58"
+    var serverIP = "claj.mindustry.dev"
     var serverPort = 9000
     var lastPing = -1
     var lastPingAt = Time.millis() // Prevents ping during init block
