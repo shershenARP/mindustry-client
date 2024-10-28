@@ -3,26 +3,20 @@
 package mindustry.client.utils
 
 import arc.*
-import arc.graphics.*
-import arc.struct.*
 import arc.util.*
 import mindustry.Vars.*
 import mindustry.client.*
 import mindustry.client.ui.*
-import mindustry.client.utils.*
+import mindustry.client.utils.CustomMode.*
+import mindustry.client.utils.Server.*
 import mindustry.content.*
-import mindustry.content.Blocks.*
 import mindustry.content.UnitTypes.*
 import mindustry.entities.*
-import mindustry.entities.abilities.*
-import mindustry.entities.bullet.*
 import mindustry.game.EventType.*
 import mindustry.gen.*
-import mindustry.graphics.*
 import mindustry.mod.*
 import mindustry.net.Packets.*
 import mindustry.ui.fragments.ChatFragment.*
-import mindustry.world.blocks.defense.turrets.*
 import java.lang.reflect.*
 import kotlin.properties.*
 
@@ -45,8 +39,6 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
             else super.run(*args)
         }
     }, votekickString = "Type[orange] /vote <y/n>[] to vote.") {
-        val tdAgree: Cmd = Cmd("/agree", 0)
-        val tdString: String = "Type [green]/agree[] to vote!"
         override fun handleBan(p: Player) {
             ui.showTextInput("@client.banreason.title", "@client.banreason.body", "Griefing.") { reason ->
                 val id = p.trace?.uuid ?: p.serverID
@@ -62,8 +54,9 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
         override fun adminui() = player.admin || ClientVars.rank >= 5
         override fun handleVoteButtons(msg: ChatMessage) {
             super.handleVoteButtons(msg)
-            if (msg.sender == null && CustomMode.tower_defense() && tdString in msg.message) {
-                msg.addButton(tdAgree.str, tdAgree::invoke)
+            if (msg.sender == null && defense() && "Type [green]/agree[] to vote!" in msg.message) { // td upgrade voting
+                val agree = Cmd("/agree", 0)
+                msg.addButton(agree.str, agree::invoke)
             }
         }
     },
@@ -137,7 +130,7 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
         init {
             Events.on(MenuReturnEvent::class.java) {
                 current = other
-                Log.debug("Returning to menu, server override cleared")
+                Log.debug("Returning to menu, server, mode override cleared")
             }
         }
 
@@ -181,43 +174,46 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
     open fun blockEffect(fx: Effect, rot: Float): Boolean = false
 }
 
-enum class CustomMode {
+enum class CustomMode(
+    val modeName: String? = null // Override the name of the mode
+) {
     none,
     flood {
         val ioFloodCompatRepo = "mindustry-antigrief/FloodCompat"
 
         override fun enable() {
             super.enable()
-            if (Server.io() && net.client()) {
-                val floodcompatMod: Mods.LoadedMod? = mods.list().find { it.getRepo()?.lowercase() == ioFloodCompatRepo.lowercase() }
+            flood.name
+            if (io() && net.client()) { // FINISHME: Load the mod at runtime
+                val floodcompatMod: Mods.LoadedMod? = mods.list().find { it.repo?.lowercase() == ioFloodCompatRepo.lowercase() }
                 Timer.schedule({
-                if (floodcompatMod === null) {
-                    ui.chatfrag.addMsg(
-                        "[accent]Floodcompat mod [scarlet]not[] found! Installing the [white]${ioFloodCompatRepo}[] mod is recommended for a better game experience." +
-                        "\n[green]INSTALL")
-                    .addButton("INSTALL") {
-                        Toast(3f).add("Downloading mod")
-                        ui.mods.githubImportMod(ioFloodCompatRepo, false, null, "") {
-                            Toast(3f).add("Downloaded!")
-                            val mod: Mods.LoadedMod = mods.list().find { it.getRepo()?.lowercase() == ioFloodCompatRepo.lowercase() } ?: return@githubImportMod
-                            mods.setEnabled(mod, true)
-                            ui.chatfrag.addMsg("[accent]Mod downloaded! Restart game to apply mod.\n[red]RESTART").addButton("RESTART") { restartGame() };
+                    if (floodcompatMod === null) {
+                        ui.chatfrag.addMsg(
+                            "[accent]Floodcompat mod [scarlet]not[] found! Installing the [white]${ioFloodCompatRepo}[] mod is recommended for a better game experience." +
+                            "\n[green]INSTALL")
+                        .addButton("INSTALL") {
+                            Toast(3f).add("Downloading mod")
+                            ui.mods.githubImportMod(ioFloodCompatRepo, false, null, "") {
+                                Toast(3f).add("Downloaded!")
+                                val mod: Mods.LoadedMod = mods.list().find { it.repo?.lowercase() == ioFloodCompatRepo.lowercase() } ?: return@githubImportMod
+                                mods.setEnabled(mod, true)
+                                ui.chatfrag.addMsg("[accent]Mod downloaded! Restart game to apply mod.\n[red]RESTART").addButton("RESTART") { restartGame() };
+                            }
+                        }
+                    } else if (!floodcompatMod.enabled()){
+                        ui.chatfrag.addMsg(
+                            "[accent]Floodcompat mod [scarlet]disabled[]! Enabling it is recommended for a better game experience." +
+                            "\n[green]ENABLE (requires restart)")
+                        .addButton("ENABLE (requires restart)") {
+                            mods.setEnabled(floodcompatMod, true)
+                            restartGame()
                         }
                     }
-                } else if (!floodcompatMod.enabled()){
-                    ui.chatfrag.addMsg(
-                        "[accent]Floodcompat mod [scarlet]disabled[]! Enabling it is recommended for a better game experience." +
-                        "\n[green]ENABLE (requires restart)")
-                    .addButton("ENABLE (requires restart)") {
-                        mods.setEnabled(floodcompatMod, true)
-                        restartGame()
-                    }
-                }
                 }, 2f)
             }
         }
     },
-    tower_defense;
+    defense(modeName = "tower defense");
 
     companion object {
         @JvmStatic var current by Delegates.observable(none) { _, oldValue, newValue ->
@@ -230,11 +226,10 @@ enum class CustomMode {
         init {
             Events.on(WorldLoadEvent::class.java) {
                 val modeName = if (!net.client() || ui.join.lastHost?.modeName?.isBlank() != false) state.rules.modeName?.lowercase() else ui.join.lastHost.modeName.lowercase()
-                current = entries.find { it.name == modeName?.replace(" ", "_") } ?: none
+                current = entries.find { (it.modeName ?: it.name) == modeName } ?: none // If modeName (or just the enum name if modeName is unspecified) matches, setup this mode
             }
 
             Events.on(MenuReturnEvent::class.java) {
-                Log.debug("Returning to menu")
                 current = none
             }
         }
