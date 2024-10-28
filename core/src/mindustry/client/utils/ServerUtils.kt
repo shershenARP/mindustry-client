@@ -3,6 +3,7 @@
 package mindustry.client.utils
 
 import arc.*
+import arc.files.*
 import arc.util.*
 import mindustry.Vars.*
 import mindustry.client.*
@@ -180,36 +181,63 @@ enum class CustomMode(
     none,
     flood {
         val ioFloodCompatRepo = "mindustry-antigrief/FloodCompat"
+        var hasLoaded = false
 
         override fun enable() {
             super.enable()
-            flood.name
-            if (io() && net.client()) { // FINISHME: Load the mod at runtime
-                val floodcompatMod: Mods.LoadedMod? = mods.list().find { it.repo?.lowercase() == ioFloodCompatRepo.lowercase() }
-                Timer.schedule({
-                    if (floodcompatMod === null) {
-                        ui.chatfrag.addMsg(
-                            "[accent]Floodcompat mod [scarlet]not[] found! Installing the [white]${ioFloodCompatRepo}[] mod is recommended for a better game experience." +
-                            "\n[green]INSTALL")
-                        .addButton("INSTALL") {
-                            Toast(3f).add("Downloading mod")
-                            ui.mods.githubImportMod(ioFloodCompatRepo, false, null, "") {
-                                Toast(3f).add("Downloaded!")
-                                val mod: Mods.LoadedMod = mods.list().find { it.repo?.lowercase() == ioFloodCompatRepo.lowercase() } ?: return@githubImportMod
-                                mods.setEnabled(mod, true)
-                                ui.chatfrag.addMsg("[accent]Mod downloaded! Restart game to apply mod.\n[red]RESTART").addButton("RESTART") { restartGame() };
-                            }
+            if (io() && net.client()) {
+                var floodMod: Mods.LoadedMod? = mods.getMod("floodcompat")
+
+                fun enable() { // Just enables the mod
+                    if (hasLoaded) return // Only attempt to enable the mod once
+                    hasLoaded = true
+
+                    Log.warn("FloodCompat installed but disabled. Foo's will load it at runtime.")
+
+                    mods.mods.remove(floodMod)
+                    floodMod!!.dispose()
+                    Core.settings.put("mod-floodcompat-enabled", true) // Has to be enabled for the mod to load
+                    val mod = Reflect.invoke<Mods.LoadedMod>(mods, "loadMod", arrayOf(floodMod!!.file), Fi::class.java) // Load the mod and call the init() function
+                    mod.main.init()
+                    // Next 5 lines sort the new mod as if it were enabled without actually keeping it enabled after a restart
+                    mod.state = Mods.ModState.enabled
+                    mods.mods.add(mod)
+                    Reflect.invoke<Void>(mods, "sortMods")
+                    Reflect.set(mods, "lastOrderedMods", null) // Reset orderedMods cache
+                    Core.settings.put("mod-floodcompat-enabled", false) // May as well disable it as it was before
+                }
+
+                fun download(update: Boolean = false) { // Downloads and enables the mod
+                    Toast(3f).add(if (update) "Updating" else "Installing" + " FloodCompat")
+                    Log.debug(if (update) "Updating" else "Installing" + " FloodCompat")
+                    ui.mods.githubImportMod(ioFloodCompatRepo, true, null, floodMod?.meta?.version) {
+                        val new = mods.mods.last { it.name == "floodcompat"} // newly downloaded flood compat if any
+                        if (update && new != floodMod) { // Delete old flood mod for update. If new == old, there was no update.
+                            floodMod!!.file.deleteDirectory()
+                            floodMod!!.dispose()
+                            mods.mods.remove(floodMod)
                         }
-                    } else if (!floodcompatMod.enabled()){
-                        ui.chatfrag.addMsg(
-                            "[accent]Floodcompat mod [scarlet]disabled[]! Enabling it is recommended for a better game experience." +
-                            "\n[green]ENABLE (requires restart)")
-                        .addButton("ENABLE (requires restart)") {
-                            mods.setEnabled(floodcompatMod, true)
-                            restartGame()
-                        }
+                        val reload = Reflect.get<Boolean>(mods, "requiresReload")
+                        Reflect.set(mods, "requiresReload", reload)
+                        Toast(3f).add("FloodCompat " + if (update) "updated" else "installed" + " successfully!")
+                        Core.settings.put("mod-floodcompat-enabled", false) // Set as disabled as there's no reason to load it outside of flood gamemode
+                        floodMod = mods.getMod("floodcompat") // floodMod is still null from before, set it to the mod we just downloaded
+                        enable()
                     }
-                }, 2f)
+                }
+
+                if (floodMod === null) {
+                    ui.showConfirm("[scarlet]FloodCompat mod not found!", "Installing the [accent]${ioFloodCompatRepo}[] mod is recommended for a better game experience. Would you like to install it?\nThis will not require a restart.") {
+                        Toast(3f).add("Downloading mod")
+                        download()
+                    }
+                } else if (!floodMod.enabled()) {
+                    if (!hasLoaded && Time.timeSinceMillis(Core.settings.getLong("lastfloodcompatupdate", Time.millis())) > 1000 * 60 * 30L) { // Update floodCompat every 30m
+                        Core.settings.put("lastfloodcompatupdate", Time.millis())
+                        (floodMod.root as? ZipFi)?.delete() // Close the current flood zip just in case its open somehow (it should not be)
+                        download(true)
+                    } else enable() // Enable the mod as normal otherwise
+                }
             }
         }
     },

@@ -52,19 +52,16 @@ public class ModsDialog extends BaseDialog{
     private boolean autoUpdating; // Whether mods are currently being auto updated
     private float scroll = 0f;
 
-    private Runnable autoUpdaterHandler = () -> { // RUN THIS ON THE MAIN THREAD
+    private final Runnable autoUpdaterHandler = () -> { // RUN THIS ON THE MAIN THREAD
         if (++prompted == expected) { // FINISHME: Awful
             autoUpdating = false;
             if (mods.requiresReload()){
-                if (Core.settings.getInt("modautoupdate") == 2) {
-                    ClientUtils.restartGame();
-                    reload();
-                }
+                if (Core.settings.getInt("modautoupdate") == 2) reload();
                 new Toast(5f).add("[accent]Mod updates found, they will be installed after restart.");
             } else new Toast(5f).add("[accent]No mod updates found.");
         }
     };
-    private ObjectMap<String, Runnable> onSuccess = new ObjectMap();
+    private final ObjectMap<String, Runnable> onSuccess = new ObjectMap<>();
 
     public ModsDialog(){
         super("@mods");
@@ -126,7 +123,7 @@ public class ModsDialog extends BaseDialog{
                 autoUpdating = true;
                 Log.debug("Checking for mod updates @", Time.timeSinceMillis(settings.getLong("lastmodupdate", hour + 1)) / (60*1000f));
                 Core.settings.put("lastmodupdate", Time.millis());
-                for (Mods.LoadedMod mod : mods.mods.copy().shuffle()) { // Use shuffled mod list, if the user has more than 30 active mods, this will ensure that each is checked at least somewhat frequently
+                for (Mods.LoadedMod mod : mods.mods.copy().shuffle()) { // Use shuffled mod list, if the user has more than 30 active mods, this will ensure that each is checked at least somewhat frequently FINISHME: This should take dependencies and requirements into account which we don't do currently
                     if (!mod.enabled() || mod.getRepo() == null || !settings.getBool(mod.autoUpdateString(), true)) continue;
                     if (expected++ >= 30) continue; // Only make up to 30 api requests
                     onSuccess.put(mod.getRepo(), autoUpdaterHandler);
@@ -711,7 +708,7 @@ public class ModsDialog extends BaseDialog{
     private void importSuccess(String repo){
         var func = onSuccess.remove(repo);
         if(func == null) return;
-        Core.app.post(() -> func.run());
+        Core.app.post(func);
     }
 
     private void importFail(Throwable t){

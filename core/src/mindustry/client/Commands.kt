@@ -113,7 +113,7 @@ fun setupCommands() {
             }
         }
 
-        player.sendMessage("client.command.count.success"[type.localizedName, total, cap, free, freeFlagged, flagged, unflagged, players, command, logic, logicFlagged])
+        player.sendMessage("client.command.count.success".bundle(type.localizedName, total, cap, free, freeFlagged, flagged, unflagged, players, command, logic, logicFlagged))
     }
 
     // FINISHME: Add unit control/select command(s)

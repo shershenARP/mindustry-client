@@ -7,6 +7,7 @@ import arc.scene.ui.layout.*
 import arc.util.*
 import mindustry.*
 import mindustry.client.claj.ClajSupport.createRoom
+import mindustry.client.utils.*
 import mindustry.gen.*
 import mindustry.ui.*
 import mindustry.ui.dialogs.*
@@ -40,7 +41,7 @@ class ClajManagerDialog : BaseDialog("@client.claj.manage") {
                     Vars.ui.showErrorMessage(ignored.message)
                 }
             }.disabled { list.children.size >= 4 }.padTop(8f).row()
-            rooms.label { if (Time.timeSinceMillis(lastPingAt) > 1000) { lastPingAt = Time.millis(); Vars.net.pingHost(serverIP, serverPort, { lastPing = it.ping }) { lastPing = -2 } }; "Ping: " + if (lastPing == -2) "[scarlet]Error contacting server." else if (lastPing == -1) "[orange]Not yet contacted." else "${lastPing}ms" }
+            rooms.label { if (Time.timeSinceMillis(lastPingAt) > 1000) { lastPingAt = Time.millis(); Vars.net.pingHost(serverIP, serverPort, { lastPing = it.ping }) { lastPing = -2 } }; if (lastPing == -2) "[scarlet]" + "client.claj.ping.error".bundle() else if (lastPing == -1) "[orange]" + "client.claj.ping.pending".bundle() else "ping".bundle(lastPing) }
         }.height(550f).row()
         val l = cont.labelWrap("@client.claj.info").labelAlign(2, 8).padTop(16f).width(400f).get()
         l.style.fontColor = Color.lightGray

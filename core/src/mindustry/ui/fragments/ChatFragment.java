@@ -680,7 +680,7 @@ public class ChatFragment extends Table{
             if(sender == null){ //no sender, this is a server message?
                 formattedMessage = prefix + (message == null ? "" : message);
             } else {
-                if (Server.darkdustry.b()) formattedMessage = prefix + message; // Hack to allow darkdustry translation as they don't change sender
+                if (Server.darkdustry.b()) formattedMessage = prefix + message; // Hack to allow darkdustry translation as they don't change sender FINISHME: We need to rework this system badly as some servers change the messages significantly
                 else formattedMessage = prefix + "[coral][[[white]" + sender + "[coral]]:[white] " + unformatted;
             }
             int shift = formattedMessage.length() - initial;

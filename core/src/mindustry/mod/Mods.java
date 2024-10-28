@@ -222,9 +222,8 @@ public class Mods implements Loadable{
     }
 
     private void loadIcon(LoadedMod mod){
-        mod.attemptedIconLoad = true;
         //try to load icon for each mod that can have one
-        if(mod.root.child("icon.png").exists() && !headless){
+        if(mod.root.child("icon.png").exists() && !headless && !mod.attemptedIconLoad){
             try{
                 mod.iconTexture = new Texture(mod.root.child("icon.png"));
                 mod.iconTexture.setFilter(TextureFilter.linear);
@@ -232,6 +231,7 @@ public class Mods implements Loadable{
                 Log.err("Failed to load icon for mod '" + mod.name + "'.", t);
             }
         }
+        mod.attemptedIconLoad = true;
     }
 
     private int packSprites(Seq<Fi> sprites, LoadedMod mod, boolean prefix, LinkedBlockingQueue<Pair<String, Pixmap>>[] queues){
@@ -1133,8 +1133,8 @@ public class Mods implements Loadable{
 
         /** Foo's addition to track whether we have tried to load this mod's icon */
         public boolean attemptedIconLoad;
-        private static boolean iconLoadingOptimization = Core.settings.getBool("modiconloadingoptimization");
-        private static ObjectSet<String> iconDeferralUnsupported = ObjectSet.with("mi2-utilities-java", "olupis");
+        private static final boolean iconLoadingOptimization = Core.settings.getBool("modiconloadingoptimization");
+        private static final ObjectSet<String> iconDeferralUnsupported = ObjectSet.with("mi2-utilities-java", "olupis");
 
         public LoadedMod(Fi file, Fi root, Mod main, ClassLoader loader, ModMeta meta){
             this.root = root;
@@ -1143,9 +1143,9 @@ public class Mods implements Loadable{
             this.main = main;
             this.meta = meta;
             this.name = meta.name.toLowerCase(Locale.ROOT).replace(" ", "-");
-            if(shouldBeEnabled() && (!iconLoadingOptimization || iconDeferralUnsupported.contains(this.name))){ // This is terrible.
+            if(shouldBeEnabled() && (!iconLoadingOptimization || iconDeferralUnsupported.contains(this.name))){ // This is terrible. Loads icons immediately if icon loading optimization is disabled
                 Core.app.post(() -> Vars.mods.loadIcon(this));
-            }
+            }else Vars.mods.hasLoadedIcons = false; // Makes sure that another round of icon loading will happen if icon loading optimization is enabled and we're adding a new mod
         }
 
         /** @return whether this is a java class mod. */
@@ -1210,6 +1210,7 @@ public class Mods implements Loadable{
 
         @Override
         public void dispose(){
+            attemptedIconLoad = true; // Prevents attempts at loading it again
             if(iconTexture != null){
                 iconTexture.dispose();
                 iconTexture = null;
