@@ -93,6 +93,8 @@ object TileRecords {
         Events.on(EventType.UnitDeadEvent::class.java) {
             if(it.unit == null || it.unit.team() != Vars.player.team() || it.unit.tileOn() == null) return@on
 
+            if(it.unit.controller() is MissileAI) return@on
+
             val threshold = it.unit.type.hitSize * it.unit.type.hitSize + 0.01f
             for (point in TileLog.linkedArea(it.unit.tileOn(), Mathf.ceil(it.unit.type.hitSize / Vars.tilesize))) {
                 if (point in Vars.world && it.unit.within(Vars.world[point], threshold)) {
