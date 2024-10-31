@@ -12,6 +12,7 @@ import mindustry.game.*
 import mindustry.gen.*
 import mindustry.world.*
 import mindustry.world.blocks.*
+import mindustry.world.blocks.power.*
 import java.time.*
 import kotlin.math.*
 
@@ -61,8 +62,9 @@ object TileRecords {
 
         Events.on(EventType.ConfigEventBefore::class.java) {
             if (it.player != null) Seer.blockConfig(it.player, it.tile.tile, it.value)
+            val constructor = if ((it.player == null) && it.tile.tile.block() is PowerNode) ::NodeLinkAddedTileLog else ::ConfigureTileLog
             it.tile.tile.getLinkedTiles { tile ->
-                addLog(tile, ConfigureTileLog(tile, it.player.toInteractor(), tile.block(), it.tile.rotation, it.value))
+                addLog(tile, constructor(tile, it.player.toInteractor(), tile.block(), it.tile.rotation, it.value))
             }
         }
 
@@ -90,14 +92,12 @@ object TileRecords {
 
         Events.on(EventType.UnitDeadEvent::class.java) {
             if(it.unit == null || it.unit.team() != Vars.player.team() || it.unit.tileOn() == null) return@on
-            val controller = it.unit.controller()
-            if(controller !is LogicAI && controller !is Player) return@on
 
             val threshold = it.unit.type.hitSize * it.unit.type.hitSize + 0.01f
             for (point in TileLog.linkedArea(it.unit.tileOn(), Mathf.ceil(it.unit.type.hitSize / Vars.tilesize))) {
                 if (point in Vars.world && it.unit.within(Vars.world[point], threshold)) {
                     val tile = Vars.world[point]
-                    addLog(tile, UnitDestroyedLog(tile, it.unit.toInteractor(), it.unit, controller is Player))
+                    addLog(tile, UnitDestroyedLog(tile, it.unit.toInteractor(), it.unit, it.unit.controller() is Player))
                 }
             }
         }
