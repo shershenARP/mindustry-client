@@ -112,6 +112,7 @@ public class Schematics implements Loadable{
             previews.remove(target);
         }
 
+        Pools.freeAll(target.tiles, true);
         target.tiles.clear();
         target.tiles.addAll(newSchematic.tiles);
         target.width = newSchematic.width;

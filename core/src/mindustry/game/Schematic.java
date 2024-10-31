@@ -3,6 +3,7 @@ package mindustry.game;
 import arc.files.*;
 import arc.struct.*;
 import arc.util.*;
+import arc.util.pooling.*;
 import mindustry.content.*;
 import mindustry.mod.Mods.*;
 import mindustry.type.*;
@@ -154,7 +155,7 @@ public class Schematic implements Publishable, Comparable<Schematic>{
         }
 
         public Stile copy(){
-            return new Stile(block, x, y, config, rotation);
+            return Pools.obtain(Stile.class, Stile::new).set(this);
         }
     }
 }
