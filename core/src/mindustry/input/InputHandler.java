@@ -1675,8 +1675,35 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         }
     }
 
+    private void updateWallLine(int x1, int y1, int x2, int y2){
+        String blockType = block.name.split("-wall")[0];
+        Seq<Block> equivalents = Vars.content.blocks().select(block -> block.name.startsWith(blockType + "-wall"));
+
+        int xmin = Math.min(x1, x2), xmax = Math.max(x1, x2), ymin = Math.min(y1, y2), ymax = Math.max(y1, y2);
+        for(int y = ymin; y <= ymax; ++y){
+            for(int x = xmin; x <= xmax; ++x){
+                var tile = world.tile(x, y);
+                if(tile == null) continue;
+                var otherBlock = tile.block();
+                if(otherBlock == null || otherBlock == block || otherBlock.group != BlockGroup.walls) continue;
+                Tile otherTile;
+                if(tile.build == null || (otherTile = tile.build.tile) == null || (otherTile != tile &&
+                    // include blocks that overlap with but not necessarily originate within the rect
+                    (x != xmin || otherTile.y != y) && (y != ymin && otherTile.x != x))) continue;
+                if(equivalents.contains(otherBlock, true)) continue;
+                var replacement = equivalents.find(candidate -> candidate.size == otherBlock.size);
+                if(replacement == null) continue;
+                var plan = new BuildPlan(otherTile.x, otherTile.y, 0, replacement, null);
+                plan.animScale = 1f;
+                linePlans.add(plan);
+            }
+        }
+    }
+
     protected void updateLine(int x1, int y1, int x2, int y2){
         linePlans.clear();
+        if(block.group == BlockGroup.walls && Core.input.shift()) updateWallLine(x1, y1, x2, y2);
+        else
         iterateLine(x1, y1, x2, y2, l -> {
             rotation = l.rotation;
             var plan = new BuildPlan(l.x, l.y, l.rotation, block, block.nextConfig());

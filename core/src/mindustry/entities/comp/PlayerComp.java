@@ -239,7 +239,7 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
         if(this.unit != Nulls.unit){
             //un-control the old unit
             this.unit.resetController();
-            if(!headless && isLocal()) { // Plan persistence is client side only FINISHME: Move this to some other class
+            if(!headless && isLocal() && (justSwitchFrom == null || this.unit == justSwitchFrom)) { // Plan persistence is client side only FINISHME: Move this to some other class
                 if(Navigation.currentlyFollowing instanceof BuildPath bp) bp.clearQueues();
                 persistPlans.clear(); // Don't want to stack multiple sets of plans...
                 persistPlans.ensureCapacity(this.unit.plans.size);
@@ -262,6 +262,8 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
 
             if(!headless && isLocal() && !persistPlans.isEmpty()){ // Persist plans through unit swaps
                 if(!ClientVars.syncing && Time.timeSinceMillis(ClientVars.lastJoinTime) < 3000) persistPlans.clear(); // I can't find a more reliable way to not persist through map changes
+                control.input.playerPlanTree.clear();
+                player.unit().plans.each(control.input.playerPlanTree::insert);
                 persistPlans.each(unit::addBuild);
                 persistPlans.clear();
                 persistPlans.shrink(); // Don't want an array hanging around in memory, replace it with a 0 element array
