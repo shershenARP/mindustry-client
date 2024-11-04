@@ -126,8 +126,8 @@ public class ModsDialog extends BaseDialog{
                 for (Mods.LoadedMod mod : mods.mods.copy().shuffle()) { // Use shuffled mod list, if the user has more than 30 active mods, this will ensure that each is checked at least somewhat frequently FINISHME: This should take dependencies and requirements into account which we don't do currently
                     if (!mod.enabled() || mod.getRepo() == null || !settings.getBool(mod.autoUpdateString(), true)) continue;
                     if (expected++ >= 30) continue; // Only make up to 30 api requests
-                    onSuccess.put(mod.getRepo(), autoUpdaterHandler);
-                    githubImportMod(mod.getRepo(), mod.isJava(), null, mod.meta.version); // FINISHME: Handle deletion of old file on shutdown
+                    mod.isAutoUpdating = true;
+                    githubImportMod(mod.getRepo(), mod.isJava(), null, mod.meta.version, autoUpdaterHandler);
                 }
             } else Log.debug("Not updating mods, updated too recently / auto update is disabled / no enabled mods.");
         });

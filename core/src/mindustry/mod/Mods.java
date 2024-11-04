@@ -27,6 +27,7 @@ import mindustry.type.*;
 import mindustry.ui.*;
 
 import java.io.*;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -114,18 +115,21 @@ public class Mods implements Loadable{
             file.copyTo(dest);
 
             var loaded = loadMod(dest, true, true);
-            mods.add(loaded);
-            //invalidate ordered mods cache
-            lastOrderedMods = null;
-            requiresReload = true;
-            //enable the mod on import
-            Core.settings.put("mod-" + loaded.name + "-enabled", true);
-            sortMods();
+            if(!loaded.isAutoUpdating) { // If this was imported as an auto update, don't run any code relating to importing the mod.
+                mods.add(loaded);
+                //invalidate ordered mods cache
+                lastOrderedMods = null;
+                requiresReload = true;
+                //enable the mod on import
+                Core.settings.put("mod-" + loaded.name + "-enabled", true);
+                sortMods();
+            }
             //try to load the mod's icon so it displays on import
             Core.app.post(() -> loadIcon(loaded));
 
             Events.fire(Trigger.importMod);
 
+            loaded.isAutoUpdating = false; // No longer auto updating
             return loaded;
         }catch(IOException e){
             dest.delete();
@@ -978,6 +982,19 @@ public class Mods implements Loadable{
         return loadMod(sourceFile, false, true);
     }
 
+    private final ObjectMap<String, Runnable> autoUpdatedMods = new ObjectMap<>();
+    { // This is jank. I do not mind.
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (autoUpdatedMods.isEmpty()) return;
+            Log.debug("Installing updated mods.");
+            autoUpdatedMods.each((mod, run) -> {
+                if (mods.contains(m -> m.name.equals(mod))) run.run();
+                else Log.info("Failed to find mod @", mod);
+            });
+            Log.debug("Updated mod installation succeeded.");
+        }));
+    }
+
     /** Loads a mod file+meta, but does not add it to the list.
      * Note that directories can be loaded as mods. */
     private LoadedMod loadMod(Fi sourceFile, boolean overwrite, boolean initialize) throws Exception{
@@ -1008,18 +1025,33 @@ public class Mods implements Loadable{
             if(other != null){
                 //steam mods can't really be deleted, they need to be unsubscribed
                 if(overwrite && !other.hasSteamID()){
-                    //close zip file
-                    if(other.root instanceof ZipFi){
-                        other.root.delete();
-                    }
-                    //delete the old mod directory
-                    if(other.file.isDirectory()){
-                        other.file.deleteDirectory();
-                    }else{
-                        other.file.delete();
-                    }
-                    //unload
-                    mods.remove(other);
+                    Runnable handleOverwrite = () -> {
+                        //close the classloader for jar mods
+                        if(other.loader instanceof URLClassLoader c){
+                            try{
+                                c.close();
+                            }catch(IOException e){
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+                        //close zip file
+                        if(other.root instanceof ZipFi){
+                            other.root.delete();
+                        }
+                        //delete the old mod directory
+                        if(other.file.isDirectory()){
+                            other.file.deleteDirectory();
+                        }else{
+                            other.file.delete();
+                        }
+                        //unload
+                        mods.remove(other);
+                    };
+                    if(other.isAutoUpdating) { // If we're auto updating, overwrite on shutdown.
+                        autoUpdatedMods.put(baseName, handleOverwrite);
+                        initialize = false;
+                    } else handleOverwrite.run(); // If we're not auto updating, overwrite immediately.
                 }else{
                     throw new ModLoadException("A mod with the name '" + baseName + "' is already imported.");
                 }
@@ -1097,7 +1129,10 @@ public class Mods implements Loadable{
                 Log.info("Loaded mod '@' in @ms", meta.name, duration);
             }
 
-            return new LoadedMod(sourceFile, zip, mainMod, loader, meta);
+            var out = new LoadedMod(sourceFile, zip, mainMod, loader, meta);
+            out.isAutoUpdating = other != null && other.isAutoUpdating; // Propagate autoUpdating value to output
+            if(other != null) other.isAutoUpdating = false; // Other is no longer being updated
+            return out;
         }catch(Exception e){
             //delete root zip file so it can be closed on windows
             if(rootZip != null) rootZip.delete();
@@ -1133,6 +1168,9 @@ public class Mods implements Loadable{
 
         /** Foo's addition to track whether we have tried to load this mod's icon */
         public boolean attemptedIconLoad;
+        /** Whether this mod is currently being auto updated. */
+        public boolean isAutoUpdating;
+
         private static final boolean iconLoadingOptimization = Core.settings.getBool("modiconloadingoptimization");
         private static final ObjectSet<String> iconDeferralUnsupported = ObjectSet.with("mi2-utilities-java", "olupis");
 
