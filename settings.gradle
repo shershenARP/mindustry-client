@@ -3,6 +3,9 @@ pluginManagement { // FINISHME: Move all the plugin versions and such here.
         gradlePluginPortal()
         google()
     }
+    plugins {
+        id "org.jetbrains.kotlin.jvm" version "2.0.10"
+    }
 }
 
 if(JavaVersion.current().ordinal() < JavaVersion.VERSION_16.ordinal()){

@@ -4,11 +4,8 @@ buildscript {
     }
 }
 
-plugins {
-    id "org.jetbrains.kotlin.jvm" version "2.0.10"
-}
-
 sourceSets.main.java.srcDirs = ["src/"]
+sourceSets.main.kotlin.srcDirs = ["src/"]
 
 import arc.files.Fi
 import arc.files.ZipFi
@@ -139,27 +136,11 @@ task bleedImages(){
     }
 }
 
-task mapImages(){
-    doLast{
-//        def executor = Executors.newFixedThreadPool(OS.cores)
-        def dir = new Fi(project.getProperty("startdir"))
-        def paletter = new Paletter()
-        dir.walk { fi ->
-            var name = fi.name()
-            if (paletter.blacklist.contains(name) || name.startsWith("zzzzz-") || paletter.regexlist.any(regex -> regex.matches(name))) return
-            if (!name.endsWith(".png")) {
-                throw new IOException(name)
-            }
-//            executor.execute {
-                var pix = new Pixmap(fi)
-                paletter.mapColors(pix, name)
-                fi.sibling("zzzzz-" + name).writePng(pix)
-                pix.dispose()
-//            }
-        }
-        println("Missing: $paletter.missingCount | Similar: $paletter.similar.size")
-//        Threads.await(executor)
-    }
+task mapImages(dependsOn: classes, type: JavaExec){
+    mainClass = "mindustry.tools.Paletter"
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = "../"
 }
 
 task pack(dependsOn: [classes, configurations.runtimeClasspath]){
