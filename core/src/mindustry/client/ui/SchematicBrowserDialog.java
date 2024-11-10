@@ -6,7 +6,9 @@ import arc.graphics.*;
 import arc.graphics.gl.*;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.scene.*;
 import arc.scene.actions.*;
+import arc.scene.event.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
@@ -169,6 +171,7 @@ public class SchematicBrowserDialog extends BaseDialog {
     void buildResults() {
         Table[] t = {null}; // Peak java
         t[0] = new Table() {
+            /** Custom cullingArea fix, propagates the culling size of the ScrollPane to all children. */
             @Override
             public void setCullingArea(Rect cullingArea) {
                 super.setCullingArea(cullingArea);
@@ -201,7 +204,7 @@ public class SchematicBrowserDialog extends BaseDialog {
         table.row();
         table.image().growX().padTop(10).height(3).color(Pal.accent).center();
         table.row();
-        table.table(t -> {
+        table.add(new Table(t -> {
             t.setCullingArea(new Rect()); // Make sure this isn't null for later
 
             int[] i = {0};
@@ -287,6 +290,33 @@ public class SchematicBrowserDialog extends BaseDialog {
                 }else{
                     t.add("@none").color(Color.lightGray);
                 }
+            }
+        }) {
+            /** Custom hit implementation that respects the cullingArea. Allows for significantly larger schem repos without lag */
+            @Override
+            public Element hit(float x, float y, boolean touchable) {
+//                if (cullingArea == null) return super.hit(x, y, touchable); // Fallback to vanilla behavior if cullingArea is null
+
+                float cullLeft = cullingArea.x;
+                float cullRight = cullLeft + cullingArea.width;
+                float cullBottom = cullingArea.y;
+                float cullTop = cullBottom + cullingArea.height;
+                if(x > cullRight || y > cullTop || x + getWidth() < cullLeft || y + getHeight() < cullBottom) return null; // Whole table is outside of culling bounds.
+
+                Vec2 point = Tmp.v5;
+                Element[] childrenArray = children.items;
+                for(int i = children.size - 1; i >= 0; i--){
+                    Element child = childrenArray[i];
+                    if(!child.visible || (child.x > cullRight || child.y > cullTop || child.x + child.getWidth() < cullLeft || child.y + child.getHeight() < cullBottom) && child.cullable) continue;
+                    child.parentToLocalCoordinates(point.set(x, y));
+                    Element hit = child.hit(point.x, point.y, touchable);
+                    if(hit != null) return hit;
+                }
+
+                // Element.hit pasted (to check if the table was the thing hit)
+                if(touchable && this.touchable != Touchable.enabled) return null;
+                Element e = this;
+                return x >= e.translation.x && x < width + e.translation.x && y >= e.translation.y && y < height + e.translation.y ? this : null;
             }
         });
         table.row();
