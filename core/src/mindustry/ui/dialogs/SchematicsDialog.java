@@ -250,7 +250,7 @@ public class SchematicsDialog extends BaseDialog{
         }){
             @Override
             public Element hit(float x, float y, boolean touchable){
-                if (cullingArea == null) return super.hit(x, y, touchable); // Fallback to vanilla behavior if cullingArea is null. Only happens for a few frames on open
+                if(cullingArea == null) return super.hit(x, y, touchable); // Fallback to vanilla behavior if cullingArea is null. Only happens for a few frames on open
 
                 float cullLeft = cullingArea.x;
                 float cullRight = cullLeft + cullingArea.width;
