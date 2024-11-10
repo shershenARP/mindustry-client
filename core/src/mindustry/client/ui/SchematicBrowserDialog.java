@@ -291,10 +291,10 @@ public class SchematicBrowserDialog extends BaseDialog {
                     t.add("@none").color(Color.lightGray);
                 }
             }
-        }) {
+        }){
             /** Custom hit implementation that respects the cullingArea. Allows for significantly larger schem repos without lag */
             @Override
-            public Element hit(float x, float y, boolean touchable) {
+            public Element hit(float x, float y, boolean touchable){
 //                if (cullingArea == null) return super.hit(x, y, touchable); // Fallback to vanilla behavior if cullingArea is null
 
                 float cullLeft = cullingArea.x;

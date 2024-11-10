@@ -77,6 +77,7 @@ public class Schematics implements Loadable{
 
     /** Load all schematics in the folder immediately.*/
     public void load(){
+        Time.mark();
         all.clear();
 
         var await = Seq.<Future<?>>with();
@@ -94,8 +95,11 @@ public class Schematics implements Loadable{
         })));
 
         loadLoadouts();
+        Time.mark();
         await.each(Threads::await);
+        Log.debug("Awaited schematics for @ms", Time.elapsed());
         all.sort();
+        Log.debug("Loaded @ schematics in @ms", all.size, Time.elapsed());
 
         if(shadowBuffer == null){
             Core.app.post(() -> shadowBuffer = new FrameBuffer(maxSchematicSize + padding + 8, maxSchematicSize + padding + 8));
@@ -210,8 +214,7 @@ public class Schematics implements Loadable{
             Seq<Schematic> keys = previews.orderedKeys().copy();
             for(int i = 0; i < previews.size - max; i++){
                 //dispose and remove unneeded previews
-                previews.get(keys.get(i)).dispose();
-                previews.remove(keys.get(i));
+                previews.remove(keys.get(i)).dispose();
             }
             //update last clear time
             lastClearTime = Time.millis();
