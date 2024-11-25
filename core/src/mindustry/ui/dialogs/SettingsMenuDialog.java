@@ -1172,7 +1172,7 @@ public class SettingsMenuDialog extends BaseDialog{
             public void add(SettingsTable table){
                 TextField field = new TextField(settings.getString(name));
                 field.setMessageText(def);
-                field.typed(c -> {
+                field.changed(() -> {
                     settings.put(name, field.getText());
                     if(changed != null){
                         changed.get(field.getText());
@@ -1197,7 +1197,7 @@ public class SettingsMenuDialog extends BaseDialog{
                 TextArea area = new TextArea(settings.getString(name));
                 area.setPrefRows(5);
 
-                area.typed(c -> {
+                area.changed(() -> {
                     settings.put(name, area.getText());
                     if(changed != null){
                         changed.get(area.getText());
