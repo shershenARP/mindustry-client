@@ -1106,6 +1106,11 @@ public class SettingsMenuDialog extends BaseDialog{
 
         // Elements are actually added below
         public static class Category extends Setting{
+            protected final static ImageButton.ImageButtonStyle style = new ImageButton.ImageButtonStyle(){{
+                imageDownColor = Pal.accent;
+                imageOverColor = Pal.accent;
+                imageUpColor = Pal.accent;
+            }};
             protected Table children = new Table();
             private final Collapser collapser = new Collapser(children, settings.getBool("settingscategory-" + name + "-enabled", true));
 
@@ -1117,7 +1122,18 @@ public class SettingsMenuDialog extends BaseDialog{
             @Override
             public void add(SettingsTable table){
                 table.add("").row(); // Add a cell first as .row doesn't work if there are no cells in the current row.
-                table.check("[accent]" + title, !collapser.isCollapsed(), b -> { collapser.setCollapsed(!b); settings.put("settingscategory-" + name + "-enabled", !b); });
+                final Runnable onClicked = () -> {
+                    collapser.toggle();
+                    settings.put("settingscategory-" + name + "-enabled", collapser.isCollapsed());
+                };
+                table.table(t -> {
+                    t.add(title).center().growX().color(Pal.accent).get().clicked(onClicked);
+                    t.button(Icon.downOpen, style, onClicked)
+                        .update(i -> i.getStyle().imageUp = (!collapser.isCollapsed() ? Icon.upOpen : Icon.downOpen))
+                        .size(10f).right().padRight(10f);
+                }).growX();
+                table.row();
+                table.image(Tex.whiteui, Pal.accent).growX().height(3f).pad(4f);
                 table.row();
                 table.add(collapser).left();
                 table.row();
