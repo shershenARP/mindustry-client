@@ -15,6 +15,7 @@ import mindustry.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.client.*;
 import mindustry.client.communication.*;
+import mindustry.client.ui.*;
 import mindustry.client.utils.*;
 import mindustry.core.GameState.*;
 import mindustry.entities.*;
@@ -372,7 +373,12 @@ public class NetClient implements ApplicationListener{
             var res = matcher.toMatchResult();
             if(res.start() < start) continue; // .find(start) is cursed
             var url = res.group(1) == null ? "https://" + res.group() : res.group(); // Add https:// if missing protocol
-            msg.addButton(res.start(), res.end(), () -> Menus.openURI(url));
+            msg.addButton(res.start(), res.end(), () -> {
+                if(Core.input.shift()){
+                    Core.app.setClipboardText(url);
+                    new Toast(3).add(Core.bundle.get("copied"));
+                } else Menus.openURI(url);
+            });
         }
         return msg;
     }
