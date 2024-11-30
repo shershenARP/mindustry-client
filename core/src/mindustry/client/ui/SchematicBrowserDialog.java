@@ -45,6 +45,7 @@ public class SchematicBrowserDialog extends BaseDialog {
     private final Pattern ignoreSymbols = Pattern.compile("[`~!@#$%^&*()\\-_=+{}|;:'\",<.>/?]");
     private final Seq<String> tags = new Seq<>(), selectedTags = new Seq<>();
     private final ItemSeq reusableItemSeq = new ItemSeq();
+    private ScrollPane pane;
 
     public SchematicBrowserDialog(){
         super("@client.schematic.browser");
@@ -98,8 +99,10 @@ public class SchematicBrowserDialog extends BaseDialog {
     void setup(){
         Time.mark();
         loadRepositories();
-        nameSearch = "";
-        descSearch = "";
+        if(!Core.settings.getBool("schematicuicarryover")){
+            nameSearch = "";
+            descSearch = "";
+        }
 
         cont.top();
         cont.clear();
@@ -122,6 +125,7 @@ public class SchematicBrowserDialog extends BaseDialog {
                     rebuildPane.run();
                 }).growX().get();
                 nameSearchField.setMessageText("@schematic.search");
+                nameSearchField.setSelection(0, nameSearch.length());
             }).growX();
             t.table(s -> {
                 s.setWidth(t.getWidth() / 2);
@@ -194,7 +198,15 @@ public class SchematicBrowserDialog extends BaseDialog {
             }
         };
         rebuildPane.run();
-        cont.pane(t[0]).grow().scrollX(false);
+        var pane = cont.pane(t[0]).grow().scrollX(false).get();
+        if(Core.settings.getBool("schematicuicarryover") && this.pane != null){
+            float scroll = this.pane.getVisualScrollY();
+            Core.app.post(() -> {
+                pane.setScrollYForce(scroll);
+                pane.updateVisualScroll();
+            });
+        }
+        this.pane = pane;
     }
 
     void buildRepo(Table table, String repo, String nameSearchString, String descSearchString){

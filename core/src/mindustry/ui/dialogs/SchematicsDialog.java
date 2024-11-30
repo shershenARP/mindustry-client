@@ -46,6 +46,7 @@ public class SchematicsDialog extends BaseDialog{
     private Seq<String> tags, selectedTags = new Seq<>();
     private boolean checkedTags;
     private final ItemSeq reusableItemSeq = new ItemSeq();
+    private ScrollPane pane;
 
     public SchematicsDialog(){
         super("@schematics");
@@ -68,7 +69,7 @@ public class SchematicsDialog extends BaseDialog{
             checkedTags = true;
         }
 
-        search = "";
+        if(!Core.settings.getBool("schematicuicarryover")) search = "";
 
         cont.top();
         cont.clear();
@@ -84,6 +85,7 @@ public class SchematicsDialog extends BaseDialog{
                     rebuildPane.run();
                 }).growX().get();
                 searchField.setMessageText("@schematic.search");
+                searchField.setSelection(0, search.length());
             }).growX();
             t.table(s -> {
                 s.setWidth(t.getWidth() / 2);
@@ -128,7 +130,7 @@ public class SchematicsDialog extends BaseDialog{
 
         cont.row();
 
-        cont.pane(new Table(t -> {
+        var pane = cont.pane(new Table(t -> {
             t.top();
 
             t.update(() -> {
@@ -273,7 +275,15 @@ public class SchematicsDialog extends BaseDialog{
                 Element e = this;
                 return x >= e.translation.x && x < width + e.translation.x && y >= e.translation.y && y < height + e.translation.y ? this : null;
             }
-        }).grow().scrollX(false);
+        }).grow().scrollX(false).get();
+        if(Core.settings.getBool("schematicuicarryover") && this.pane != null){
+            float scroll = this.pane.getVisualScrollY();
+            Core.app.post(() -> {
+                pane.setScrollYForce(scroll);
+                pane.updateVisualScroll();
+            });
+        }
+        this.pane = pane;
     }
 
     public void showInfo(Schematic schematic){
