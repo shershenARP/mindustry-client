@@ -19,6 +19,7 @@ import mindustry.input.*;
 import mindustry.ui.*;
 import mindustry.ui.fragments.*;
 import mindustry.world.*;
+import mindustry.world.blocks.distribution.*;
 import mindustry.world.meta.*;
 import mindustry.world.modules.*;
 
@@ -223,6 +224,10 @@ public class PowerNode extends PowerBlock{
     }
 
     public void getPotentialLinks(Tile tile, Team team, Cons<Building> others, boolean skipExisting){
+        getPotentialLinks(tile, team, others, true, true);
+    }
+
+    public void getPotentialLinks(Tile tile, Team team, Cons<Building> others, boolean skipExisting, final boolean syncWithServer){
         if(!autolink) return;
 
         Boolf<Building> valid = other -> other != null && other.tile() != tile && other.block.connectedPower && other.power != null &&
@@ -264,6 +269,10 @@ public class PowerNode extends PowerBlock{
         tempBuilds.sort((a, b) -> {
             int type = -Boolean.compare(a.block instanceof PowerNode, b.block instanceof PowerNode);
             if(type != 0) return type;
+            if(!syncWithServer && (type = Boolean.compare(
+                a instanceof ItemBridge.ItemBridgeBuild i && i.link == -1,
+                b instanceof ItemBridge.ItemBridgeBuild i && i.link == -1
+            )) != 0) return type;
             return Float.compare(a.dst2(tile), b.dst2(tile));
         });
 
@@ -403,7 +412,7 @@ public class PowerNode extends PowerBlock{
                 if(!power.links.contains(other.pos())){
                     configureAny(other.pos());
                 }
-            });
+            }, true, false);
 
             super.placed();
         }
@@ -429,7 +438,7 @@ public class PowerNode extends PowerBlock{
                         if(!insulated(this, link) && total[0] < maxNodes){
                             links[total[0]++] = new Point2(link.tileX() - tile.x, link.tileY() - tile.y);
                         }
-                    });
+                    }, true, false);
                     configure(Arrays.copyOfRange(links, 0, total[0]));
                 }else{ // Clear all links
                     configure(new Point2[0]);
