@@ -1121,19 +1121,20 @@ public class SettingsMenuDialog extends BaseDialog{
 
             @Override
             public void add(SettingsTable table){
+                ImageButton[] arrowButton = {null};
                 table.add("").row(); // Add a cell first as .row doesn't work if there are no cells in the current row.
                 final Runnable onClicked = () -> {
                     collapser.toggle();
                     settings.put("settingscategory-" + name + "-enabled", collapser.isCollapsed());
+                    arrowButton[0].getStyle().imageUp = collapser.isCollapsed() ? Icon.downOpen : Icon.upOpen;
                 };
                 table.table(t -> {
                     t.add(title).center().growX().color(Pal.accent).get().clicked(onClicked);
-                    t.button(Icon.downOpen, style, onClicked)
-                        .update(i -> i.getStyle().imageUp = (!collapser.isCollapsed() ? Icon.upOpen : Icon.downOpen))
-                        .size(10f).right().padRight(10f);
+                    (arrowButton[0] = t.button(Icon.downOpen, style, onClicked).size(10f).right().padRight(10f).get())
+                        .getStyle().imageUp = collapser.isCollapsed() ? Icon.downOpen : Icon.upOpen;
                 }).growX();
                 table.row();
-                table.image(Tex.whiteui, Pal.accent).growX().height(3f).pad(4f);
+                table.image(Tex.whiteui, Pal.accent).growX().height(3f).padTop(4f).padBottom(4f);
                 table.row();
                 table.add(collapser).left();
                 table.row();

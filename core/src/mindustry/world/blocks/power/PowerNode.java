@@ -224,7 +224,7 @@ public class PowerNode extends PowerBlock{
     }
 
     public void getPotentialLinks(Tile tile, Team team, Cons<Building> others, boolean skipExisting){
-        getPotentialLinks(tile, team, others, true, true);
+        getPotentialLinks(tile, team, others, skipExisting, true);
     }
 
     public void getPotentialLinks(Tile tile, Team team, Cons<Building> others, boolean skipExisting, final boolean syncWithServer){

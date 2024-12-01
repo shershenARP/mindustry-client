@@ -90,6 +90,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     public BuildPlan bplan = new BuildPlan();
     public Seq<BuildPlan> linePlans = new Seq<>();
     public Seq<BuildPlan> selectPlans = new Seq<>(BuildPlan.class);
+    protected Seq<BuildPlan> temp = new Seq<>(BuildPlan.class);
     public boolean conveyorPlaceNormal = false;
     /** Last logic virus warning block FINISHME: All the client stuff here is awful */
     @Nullable public LogicBlock.LogicBuild lastVirusWarning, virusBuild;
@@ -1367,7 +1368,8 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     private final Seq<Tile> tempTiles = new Seq<>(4);
 
     protected void flushPlansReverse(Seq<BuildPlan> plans){ // FINISHME: Does this method work as intended?
-        flushPlans(plans.copy().reverse());
+        temp.set(plans);
+        flushPlans(temp.reverse());
     }
 
     public void flushPlans(Seq<BuildPlan> plans) {
@@ -1631,47 +1633,38 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         freezeSelection(x1, y1, x2, y2, false, maxLength);
     }
 
-    /** Helper function with changing from the first Seq to the next. Used to be a BiPredicate but moved out **/
-    private boolean checkFreezeSelectionHasNext(BuildPlan frz, Iterator<BuildPlan> it){
-        boolean hasNext;
-        while((hasNext = it.hasNext()) && it.next() != frz) ; // skip to the next instance when it.next() == frz
-        if(hasNext) it.remove();
-        return hasNext;
-    }
-
     protected void freezeSelection(int x1, int y1, int x2, int y2, boolean flush, int maxLength){
         NormalizeResult result = Placement.normalizeArea(x1, y1, x2, y2, rotation, false, maxLength);
 
-        Seq<BuildPlan> tmpFrozenPlans = new Seq<>();
         //remove build plans
-        Tmp.r1.set(result.x * tilesize, result.y * tilesize, (result.x2 - result.x) * tilesize, (result.y2 - result.y) * tilesize);
+        Rect r1 = Tmp.r1.set(result.x * tilesize, result.y * tilesize, (result.x2 - result.x) * tilesize, (result.y2 - result.y) * tilesize);
+        Rect r2 = Tmp.r2;
 
+        Seq<BuildPlan> frozenFromSelection = selectPlans.select(s -> s.bounds(r2).overlaps(r1));
+        Seq<BuildPlan> frozenFromUnit = new Seq<>(BuildPlan.class);
         for(BuildPlan plan : player.unit().plans()){
-            if(plan.bounds(Tmp.r2).overlaps(Tmp.r1)) tmpFrozenPlans.add(plan);
+            if(plan.bounds(r2).overlaps(r1)) frozenFromUnit.add(plan);
         }
 
-        for(BuildPlan plan : selectPlans){
-            if(plan.bounds(Tmp.r2).overlaps(Tmp.r1)) tmpFrozenPlans.add(plan);
-        }
+        Seq<BuildPlan> unfreeze = temp.selectFrom(frozenPlans, s -> s.bounds(r2).overlaps(r1));
 
-        Seq<BuildPlan> unfreeze = new Seq<>();
-        for(BuildPlan plan : frozenPlans){
-            if(plan.bounds(Tmp.r2).overlaps(Tmp.r1)) unfreeze.add(plan);
-        }
-
-        if(unfreeze.size > tmpFrozenPlans.size) flushPlans(unfreeze, false, false, true); // Unfreeze the selection when there's more frozen blocks in the area
+        if(unfreeze.size > frozenFromUnit.size + frozenFromSelection.size) flushPlans(unfreeze, false, false, true); // Unfreeze the selection when there's more frozen blocks in the area
         else{ // If there's fewer frozen blocks than unfrozen ones, we freeze the selection
-            Iterator<BuildPlan> it1 = player.unit().plans().iterator(), it2 = selectPlans.iterator();
-            for(BuildPlan frz : tmpFrozenPlans){
-                if(checkFreezeSelectionHasNext(frz, it1)) continue; // Player plans contains frz: remove it and continue.
-                if(/*!itHasNext implied*/ it2 != null){
-                    it1 = it2;
-                    it2 = null; // swap it2 into it1, continue iterating through without changing frz
-                    if(checkFreezeSelectionHasNext(frz, it1)) continue;
-                }
-                break; // exit if there are no remaining items in the two Seq's to check.
+            // Remove plans from their original locations
+            Iterator<BuildPlan> it = player.unit().plans().iterator();
+            boolean hasNext;
+            for(BuildPlan frz : frozenFromUnit){
+                while((hasNext = it.hasNext()) && frz != it.next());
+                if(hasNext) it.remove();
+                else break;
             }
-            frozenPlans.addAll(tmpFrozenPlans);
+            it = selectPlans.iterator();
+            for(BuildPlan frz : frozenFromSelection){
+                while((hasNext = it.hasNext()) && frz != it.next());
+                if(hasNext) it.remove();
+                else break;
+            }  
+            frozenPlans.addAll(frozenFromSelection).addAll(frozenFromUnit);
         }
     }
 
@@ -1916,7 +1909,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
             );
             if(unit != null){
                 unit.hitbox(Tmp.r1);
-                Tmp.r1.grow(input.shift() ? tilesize * 6 : 6f); // If shift is held, add 3 tiles of leeway, makes it easier to shift click units controlled by processors and such
+                Tmp.r1.grow(allowPlayers && input.shift() && !unit.isPlayer() ? tilesize * 6 : 6f); // If shift is held, add 3 tiles of leeway, makes it easier to shift click units controlled by processors and such
                 if(Tmp.r1.contains(Core.input.mouseWorld())){
                     return unit;
                 }

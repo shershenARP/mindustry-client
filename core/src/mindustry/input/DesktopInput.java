@@ -32,12 +32,14 @@ import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.ui.dialogs.*;
 import mindustry.ui.fragments.*;
 import mindustry.world.*;
 import mindustry.world.blocks.logic.*;
 import mindustry.world.blocks.payloads.*;
+import mindustry.world.meta.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -878,7 +880,7 @@ public class DesktopInput extends InputHandler{
         if(Core.input.keyTap(Binding.pause_building)){
             if (Core.input.shift()) isFreezeQueueing = !isFreezeQueueing;
             else if (Core.input.ctrl()) {
-                Seq<BuildPlan> temp = frozenPlans.copy();
+                temp.set(frozenPlans);
                 flushPlans(temp, false, false, true);
             }
             else {
@@ -909,7 +911,9 @@ public class DesktopInput extends InputHandler{
             if(Core.input.keyDown(Binding.break_block)){
                 mode = none;
             }else if(selectPlans.any()){
-                flushPlans(selectPlans, isFreezeQueueing, Core.input.keyDown(Binding.force_place_modifier), isFreezeQueueing);
+                flushPlans(
+                    temp.selectFrom(selectPlans, s -> !(s.block.buildVisibility == BuildVisibility.sandboxOnly && s.block.category != Category.defense)),
+                    isFreezeQueueing, Core.input.keyDown(Binding.force_place_modifier), isFreezeQueueing);
             }else if(isPlacing()){
                 selectX = cursorX;
                 selectY = cursorY;
