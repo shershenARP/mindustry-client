@@ -1370,6 +1370,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     protected void flushPlansReverse(Seq<BuildPlan> plans){ // FINISHME: Does this method work as intended?
         temp.set(plans);
         flushPlans(temp.reverse());
+        temp.clear();
     }
 
     public void flushPlans(Seq<BuildPlan> plans) {
@@ -1666,6 +1667,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
             }  
             frozenPlans.addAll(frozenFromSelection).addAll(frozenFromUnit);
         }
+        unfreeze.clear();
     }
 
     private void updateWallLine(int x1, int y1, int x2, int y2){

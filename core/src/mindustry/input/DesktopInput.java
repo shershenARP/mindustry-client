@@ -39,6 +39,7 @@ import mindustry.ui.fragments.*;
 import mindustry.world.*;
 import mindustry.world.blocks.logic.*;
 import mindustry.world.blocks.payloads.*;
+import mindustry.world.blocks.storage.*;
 import mindustry.world.meta.*;
 
 import static arc.Core.*;
@@ -882,6 +883,7 @@ public class DesktopInput extends InputHandler{
             else if (Core.input.ctrl()) {
                 temp.set(frozenPlans);
                 flushPlans(temp, false, false, true);
+                temp.clear();
             }
             else {
                 isBuilding = !isBuilding;
@@ -912,8 +914,9 @@ public class DesktopInput extends InputHandler{
                 mode = none;
             }else if(selectPlans.any()){
                 flushPlans(
-                    temp.selectFrom(selectPlans, s -> !(s.block.buildVisibility == BuildVisibility.sandboxOnly && s.block.category != Category.defense)),
+                    temp.selectFrom(selectPlans, s -> s.block.isVisible() || s.block instanceof CoreBlock),
                     isFreezeQueueing, Core.input.keyDown(Binding.force_place_modifier), isFreezeQueueing);
+                temp.clear();
             }else if(isPlacing()){
                 selectX = cursorX;
                 selectY = cursorY;
