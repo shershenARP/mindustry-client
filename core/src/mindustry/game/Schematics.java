@@ -145,7 +145,7 @@ public class Schematics implements Loadable{
             synchronized(all){
                 all.add(s);
             }
-                checkLoadout(s, true);
+            checkLoadout(s, true);
 
             //external file from workshop
             if(!s.file.parent().equals(schematicDirectory)){
@@ -556,7 +556,6 @@ public class Schematics implements Loadable{
         return s;
     }
 
-    private static ThreadLocal<Reads> readsLocal = Threads.local(() -> new Reads(null));
     public static Schematic read(InputStream input) throws IOException{
         for(byte b : header){
             if(input.read() != b){
@@ -595,8 +594,7 @@ public class Schematics implements Loadable{
             int total = stream.readInt();
 
             Seq<Stile> tiles = new Seq<>(total);
-            var reads = readsLocal.get();
-            reads.input = stream;
+            var reads = new Reads(stream);
             for(int i = 0; i < total; i++){
                 Block block = blocks.get(stream.readByte());
                 int position = stream.readInt();
