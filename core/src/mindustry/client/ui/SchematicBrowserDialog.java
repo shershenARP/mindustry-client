@@ -201,10 +201,9 @@ public class SchematicBrowserDialog extends BaseDialog {
         var pane = cont.pane(t[0]).grow().scrollX(false).get();
         if(Core.settings.getBool("schematicuicarryover") && this.pane != null){
             float scroll = this.pane.getVisualScrollY();
-            Core.app.post(() -> {
-                pane.setScrollYForce(scroll);
-                pane.updateVisualScroll();
-            });
+            pane.invalidate();
+            pane.setScrollYForce(scroll);
+            pane.updateVisualScroll();
         }
         this.pane = pane;
     }
