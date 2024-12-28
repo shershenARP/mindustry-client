@@ -50,10 +50,9 @@ public class ClientVars {
         dispatchingBuildPlans,
         showingOverdrives,
         showingMassDrivers;
-    @NotNull public static Seq<OverdriveProjector.OverdriveBuild> overdrives = new Seq<>(); // For whatever reason the stupid allBuildings method hates me so im just not using it FINISHME: Replace this by just expanding block clipsize and drawing a circle in the draw method rather than using this
-    @NotNull public static Seq<MassDriver.MassDriverBuild> massDrivers = new Seq<>(); // FINISHME: this too.
-    @NotNull public static Seq<PayloadMassDriver.PayloadDriverBuild> payloadMassDrivers = new Seq<>(); // i literally just copypasted the code
-
+        @NotNull public static Seq<OverdriveProjector.OverdriveBuild> overdrives = new Seq<>(false); // For whatever reason the stupid allBuildings method hates me so im just not using it FINISHME: Replace this by just expanding block clipsize and drawing a circle in the draw method rather than using this
+        @NotNull public static Seq<MassDriver.MassDriverBuild> massDrivers = new Seq<>(false); // FINISHME: this too.
+        @NotNull public static Seq<PayloadMassDriver.PayloadDriverBuild> payloadMassDrivers = new Seq<>(false); // i literally just copypasted the code
     // Commands
     @NotNull public static CommandHandler clientCommandHandler = new CommandHandler(Core.settings.getString("fooprefix", "!"));
     @NotNull public static final ObjectMap<Character, Seq<Pair<String, Prov<String>>>> containsCommandHandler = new ObjectMap<>(); // Currently a naive implementation which just replaces all occurrences
