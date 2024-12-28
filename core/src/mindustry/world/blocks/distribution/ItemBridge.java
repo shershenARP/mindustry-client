@@ -10,6 +10,7 @@ import arc.util.*;
 import arc.util.io.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.core.*;
+import mindustry.content.*;
 import mindustry.entities.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
@@ -169,10 +170,18 @@ public class ItemBridge extends Block{
 
     @Override
     public void handlePlacementLine(Seq<BuildPlan> plans){
+        boolean shift = Core.input.shift();
+        int phaseWeaveInterval = shift && this == Blocks.phaseConveyor ? Core.settings.getInt("phaseweaveinterval", 1) : 1;
         for(int i = 0; i < plans.size; i++){
             var cur = plans.get(i);
-            var next = plans.get(Math.min(Core.input.shift() ? i + range : i + 1, plans.size - 1)); // Bridge weaving is enabled when shift is held
-            if(positionsValid(cur.x, cur.y, next.x, next.y) && !cur.samePos(next)){
+            var next = plans.get(Math.min(
+                shift ?
+                    phaseWeaveInterval > 1 && i + range >= plans.size ?
+                        plans.size - 1 - (plans.size - i - 1) % phaseWeaveInterval : // Multiweave for phase
+                        i + range : // Normal weaving - Link as far down as possible
+                    i + 1, // No weaving - Link to next only
+                plans.size - 1));
+            if(positionsValid(cur.x, cur.y, next.x, next.y) && (shift || !cur.samePos(next))){
                 cur.config = new Point2(next.x - cur.x, next.y - cur.y);
             }
         }
