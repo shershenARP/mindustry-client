@@ -37,6 +37,7 @@ import static mindustry.Vars.*;
 abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Drawc{
     static final float deathDelay = 60f;
     static final Queue<BuildPlan> persistPlans = new Queue<>(1);
+    static @Nullable Unit persistPlansFrom = Nulls.unit;
 
     @Import float x, y;
 
@@ -239,11 +240,12 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
         if(this.unit != Nulls.unit){
             //un-control the old unit
             this.unit.resetController();
-            if(!headless && isLocal() && (justSwitchFrom == null || this.unit == justSwitchFrom)) { // Plan persistence is client side only FINISHME: Move this to some other class
+            if(!headless && isLocal() && persistPlansFrom != this.unit) { // Plan persistence is client side only FINISHME: Move this to some other class
                 if(Navigation.currentlyFollowing instanceof BuildPath bp) bp.clearQueues();
                 persistPlans.clear(); // Don't want to stack multiple sets of plans...
                 persistPlans.ensureCapacity(this.unit.plans.size);
                 this.unit.plans.each(persistPlans::add);
+                persistPlansFrom = this.unit;
             }
             //restore last command issued before it was controlled
             if(lastCommand != null && this.unit.controller() instanceof CommandAI ai){
