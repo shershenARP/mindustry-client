@@ -74,6 +74,8 @@ public class DesktopInput extends InputHandler{
     /** Previously selected tile. */
     public Tile prevSelected;
     private long lastShiftZ;
+    /** Position where the player started drag-selecting. Overlaps with selectX/Y but is only used by client. */
+    public float dragX, dragY;
 
     @Override
     public void buildUI(Group group){
@@ -817,6 +819,10 @@ public class DesktopInput extends InputHandler{
             if(Core.input.shift()){
                 frozenPlans.clear();
             }else{
+                if(player.unit().plans.isEmpty()){
+                    lastSchematic = null;
+                    selectPlans.clear();
+                }
                 Player.persistPlans.clear();
                 player.unit().clearBuilding();
             }
@@ -832,11 +838,11 @@ public class DesktopInput extends InputHandler{
             else ui.toggleSchematicMenu();
         }
 
-        if(Core.input.keyTap(Binding.clear_building) || isPlacing()){
-            if(!Core.input.shift()) {
+        if(/*Core.input.keyTap(Binding.clear_building) || */isPlacing()){
+            // if(!Core.input.shift()) {
                 lastSchematic = null;
                 selectPlans.clear();
-            }
+            // }
         }
 
         if(!Core.scene.hasKeyboard() && selectX == -1 && selectY == -1 && schemX != -1 && schemY != -1){
