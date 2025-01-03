@@ -646,7 +646,21 @@ public class DesktopInput extends InputHandler{
             if(Core.input.keyTap(Binding.respawn) && !scene.hasDialog()){
                 controlledType = null;
                 recentRespawnTimer = 1f;
-                Call.unitClear(player);
+                var u = player.unit();
+                var closest = player.bestCore();
+                if(CoreBlock.preferredCoreType == null ||
+                    (!u.spawnedByCore &&
+                    ((u.dockedType != null && u.dockedType.coreUnitDock) ||
+                    (closest != null && ((CoreBlock)closest.block).unitType != null &&
+                        ((CoreBlock)closest.block).unitType.coreUnitDock))
+                    )
+                ){
+                    // Use original spawning mechanism for docking units
+                    Call.unitClear(player);
+                } else {
+                    // Send a packet that supports respawning at a specific block
+                    Call.buildingControlSelect(player, closest);
+                }
             }
         }
 
