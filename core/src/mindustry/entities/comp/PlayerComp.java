@@ -80,7 +80,14 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
     /** @return largest/closest core, with largest cores getting priority */
     @Nullable
     public CoreBuild bestCore(){
-        return team.cores().min(Structs.comps(Structs.comparingInt(c -> -c.block.size), Structs.comparingFloat(c -> c.dst(x, y))));
+        if(self() != Vars.player){
+            return team.cores().min(Structs.comps(Structs.comparingInt(c -> -c.block.size), Structs.comparingFloat(c -> c.dst(x, y))));
+        } else {
+            return team.cores().min(Structs.comps(
+                Structs.comparingBool(c -> (CoreBlock)c.block != ((CoreBlock)c.block).preferredCoreType),
+                Structs.comps(Structs.comparingInt(c -> -c.block.size), Structs.comparingFloat(c -> c.dst(x, y)))
+            ));
+        }
     }
 
     public TextureRegion icon(){

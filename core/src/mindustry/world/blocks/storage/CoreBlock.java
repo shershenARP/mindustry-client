@@ -29,6 +29,8 @@ import mindustry.world.modules.*;
 import static mindustry.Vars.*;
 import static mindustry.client.ClientVars.coreItemsDisplay;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CoreBlock extends StorageBlock{
     //hacky way to pass item modules between methods
     private static ItemModule nextItems;
@@ -45,6 +47,8 @@ public class CoreBlock extends StorageBlock{
     public UnitType unitType = UnitTypes.alpha;
 
     public float captureInvicibility = 60f * 15f;
+
+    public static @Nullable CoreBlock preferredCoreType = null;
 
     public CoreBlock(String name){
         super(name);
@@ -655,12 +659,22 @@ public class CoreBlock extends StorageBlock{
         }
 
         @Override
-        public void buildConfiguration(Table table){
-            if(!state.isCampaign() || net.client()){
-                deselect();
-                return;
-            }
+        public boolean onConfigureBuildTapped(Building other){
+            deselect();
+            return false;
+        }
 
+        @Override
+        public void buildConfiguration(Table table){
+            // Client: Always have configuration to set preferred core
+            table.button(Icon.commandRally, Styles.clearTogglei, () -> {
+                preferredCoreType = preferredCoreType == this.block ? null : (CoreBlock)this.block;
+                deselect();
+            }).size(40f)
+            .checked(b -> this.block == preferredCoreType)
+            .tooltip(Core.bundle.format("client.preferredcore", this.block.localizedName));
+
+            if(state.isCampaign() && !net.client()){
             table.button(Icon.downOpen, Styles.cleari, () -> {
                 ui.planet.showSelect(state.rules.sector, other -> {
                     if(state.isCampaign()){
@@ -669,6 +683,7 @@ public class CoreBlock extends StorageBlock{
                 });
                 deselect();
             }).size(40f);
+            } // Else deselect
         }
     }
 }
