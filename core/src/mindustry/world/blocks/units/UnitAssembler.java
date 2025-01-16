@@ -94,7 +94,7 @@ public class UnitAssembler extends PayloadBlock{
         super.setBars();
 
         addBar("progress", (UnitAssemblerBuild e) -> new Bar(
-            () -> Core.bundle.format("bar.progresstime", UI.formatTime(e.plan().time * (1 - e.progress))),
+            () -> Core.bundle.format("bar.progresstime", UI.formatTime(e.plan().time * (1 - e.progress) / e.timeScale() / state.rules.unitBuildSpeedMultiplier)),
             () -> Pal.ammo,
             () -> e.progress));
 
