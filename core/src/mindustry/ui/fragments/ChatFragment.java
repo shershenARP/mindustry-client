@@ -658,6 +658,10 @@ public class ChatFragment extends Table{
         }
 
         public ChatMessage addButton(int start, int end, Runnable lambda) {
+            if (start < 0 || end > formattedMessage.length() || start > end) {
+                Log.warn("Trying to add button to @ at indices @ to @; this is invalid!", formattedMessage, start, end);
+                return this;
+            }
             if (buttons != null) {
                 buttons.add(new ClickableArea(start, end, lambda));
                 buttons.shrink();
@@ -667,7 +671,7 @@ public class ChatFragment extends Table{
 
         public ChatMessage addButton(String text, Runnable lambda) {
             int i = formattedMessage.indexOf(text);
-            return addButton(i, i + text.length(), lambda);
+            return i < 0 ? this : addButton(i, i + text.length(), lambda);
         }
 
         public ChatMessage clearButtons() {
