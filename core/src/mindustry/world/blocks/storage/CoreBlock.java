@@ -661,7 +661,7 @@ public class CoreBlock extends StorageBlock{
         @Override
         public boolean onConfigureBuildTapped(Building other){
             deselect();
-            return false;
+            return other != this;
         }
 
         @Override
@@ -669,7 +669,6 @@ public class CoreBlock extends StorageBlock{
             // Client: Always have configuration to set preferred core
             table.button(Icon.commandRally, Styles.clearTogglei, () -> {
                 preferredCoreType = preferredCoreType == this.block ? null : (CoreBlock)this.block;
-                deselect();
             }).size(40f)
             .checked(b -> this.block == preferredCoreType)
             .tooltip(Core.bundle.format("client.preferredcore", this.block.localizedName));
