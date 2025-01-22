@@ -142,7 +142,11 @@ public class BuildPath extends Path { // FINISHME: Dear god, this file does not 
         var core = player.core();
         if (timer.get(delay) && core != null) {
             if (mineItems != null) {
-                Item item = mineItems.min(i -> indexer.hasOre(i) && player.unit().canMine(i), i -> core.items.get(i));
+                var u = player.unit();
+                Item item = mineItems.min(
+                    i -> ((u.type.mineFloor && indexer.hasOre(i)) || (u.type.mineWalls && indexer.hasWallOre(i))) && player.unit().canMine(i),
+                    i -> core.items.get(i)
+                );
 
                 if (item != null && core.items.get(item) <= (cap == 0 ? core.storageCapacity : cap) / 2) { // Switch back to MinePath when core is low on items
                     player.sendMessage("[accent]Automatically switching to back to MinePath as the core is low on items.");
