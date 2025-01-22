@@ -276,6 +276,7 @@ public class NetClient implements ApplicationListener{
             } else {
                 // server message, unformatted is ignored
                 output = ui.chatfrag.addMessage(message, null, null, "", "");
+                Server.current.handleVoteButtons(output);
             }
 
             findCoords(output);
