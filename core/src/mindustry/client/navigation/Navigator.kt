@@ -71,7 +71,7 @@ abstract class Navigator {
 
         // Shield projectors
         state.teams.active.each { team ->
-            if (team === player.team()) return@each
+            if (player.team() !== null && state.teams.getOrNull(player.team()) === team) return@each
             for (block in BaseShield.baseShields) {
                 val radius = block.radius + additionalRadius
                 team.getBuildings(block).each { shield ->
