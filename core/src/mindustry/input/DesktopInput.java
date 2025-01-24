@@ -438,10 +438,14 @@ public class DesktopInput extends InputHandler{
         if(input.keyDown(Binding.pan) && scene.getKeyboardFocus() == null){
             panCam = true;
             panning = true;
+            logicCutscene = false; // Cancel the cutscene
+            if(state.gameOver && !state.rules.pvp) followGameEndPan = false;
         }
 
         if(input.keyDown(Binding.freecam_modifier) && (input.axis(Binding.move_x) != 0f || input.axis(Binding.move_y) != 0f) && scene.getKeyboardFocus() == null){
             panning = true;
+            logicCutscene = false; // Cancel the cutscene
+            if(state.gameOver && !state.rules.pvp) followGameEndPan = false;
             Spectate.INSTANCE.setPos(null);
             float speed = Time.delta;
             speed *= camera.width;
@@ -475,7 +479,7 @@ public class DesktopInput extends InputHandler{
                 //TODO do not pan
                 Team corePanTeam = state.won ? state.rules.waveTeam : player.team();
                 Position coreTarget = state.gameOver && !state.rules.pvp && corePanTeam.data().lastCore != null ? corePanTeam.data().lastCore : null;
-                Core.camera.position.lerpDelta(coreTarget != null ? coreTarget : player, Core.settings.getBool("smoothcamera") ? 0.08f : 1f);
+                Core.camera.position.lerpDelta(coreTarget != null && followGameEndPan ? coreTarget : player, Core.settings.getBool("smoothcamera") ? 0.08f : 1f);
             }
 
             if(panCam){
