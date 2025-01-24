@@ -97,6 +97,8 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     public long lastVirusWarnTime;
     private static Interval timer = new Interval();
     @Nullable private static ChatFragment.ChatMessage commandWarning;
+    /** Whether to pan the camera to core on game end. Changed by panning the camera. */
+    public boolean followGameEndPan = true;
 
     //for RTS controls
     public Seq<Unit> selectedUnits = new Seq<>();
@@ -1706,7 +1708,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
             linePlans.add(plan);
         });
 
-        if(Core.settings.getBool("blockreplace") != control.input.conveyorPlaceNormal || block instanceof ItemBridge){ // Bridges need this for weaving, I'm too lazy to fix this properly
+        if(Core.settings.getBool("blockreplace") != conveyorPlaceNormal || block instanceof ItemBridge){ // Bridges need this for weaving, I'm too lazy to fix this properly
             linePlans.each(plan -> {
                 Block replace = plan.block.getReplacement(plan, linePlans);
                 if(replace.unlockedNow()){
