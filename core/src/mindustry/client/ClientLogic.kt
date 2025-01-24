@@ -96,6 +96,7 @@ class ClientLogic {
             }
             configs.clear()
             control.input.lastVirusWarning = null
+            control.input.followGameEndPan = true
             dispatchingBuildPlans = false
             hidingBlocks = false
             hidingUnits = false
