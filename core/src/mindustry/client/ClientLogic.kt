@@ -146,8 +146,25 @@ class ClientLogic {
         Events.on(PlayerJoin::class.java) { e -> // Run when a player joins the server
             if (e.player == null) return@on
 
-            if (settings.getBool("clientjoinleave") && !Server.io() && (ui.chatfrag.messages.isEmpty || !Strings.stripColors(ui.chatfrag.messages.first().message).equals("${Strings.stripColors(e.player.name)} has connected.")) && Time.timeSinceMillis(lastJoinTime) > 10000)
-                player.sendMessage(bundle.format("client.connected", e.player.name))
+            if (settings.getBool("clientjoinleave")) {
+                val target = "${Strings.stripColors(e.player.name)} has connected."
+                val searchTime = Time.millis() - 10000;
+                val msgs = ui.chatfrag.messages
+                var found: ChatFragment.ChatMessage? = null
+                for (i in 0..<msgs.size) {
+                    if(Strings.stripColors(msgs[i].message) == target) {
+                        found = msgs[i]
+                        break
+                    }
+                    if(msgs[i].receivedAt < searchTime) break
+                }
+                if (found == null) {
+                    found = ui.chatfrag.addMsg(bundle.format("client.connected", e.player.name))
+                }
+                if (found.buttons != null && found.buttons.isEmpty) {
+                    found.addButton(e.player.name) { Spectate.spectate(e.player) }
+                }
+            }
         }
 
         Events.on(PlayerLeave::class.java) { e -> // Run when a player leaves the server

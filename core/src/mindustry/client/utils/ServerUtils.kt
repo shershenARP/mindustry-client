@@ -55,7 +55,16 @@ enum class Server( // FINISHME: This is horrible. Why have I done this?
         override fun adminui() = player.admin || ClientVars.rank >= 5
         override fun handleVoteButtons(msg: ChatMessage) {
             super.handleVoteButtons(msg)
-            if (msg.sender == null && defense() && "Type [green]/agree[] to vote!" in msg.message) { // td upgrade voting
+            if (msg.sender !== null) return
+            val message = msg.message
+            val playerCodeMatch =
+                ("""(?:player code: \[[#\w]+\]|last placed by:[\s\S]+\[[#\w]+\]ID:\[[#\w]+\] )([A-Z0-9]+)\s""")
+                .toRegex().find(message)
+            if (playerCodeMatch !== null) {
+                val (code) = playerCodeMatch.destructured
+                msg.addButton(code) { Core.app.setClipboardText(code) }
+            }
+            if (defense() && "Type [green]/agree[] to vote!" in message) { // td upgrade voting
                 val agree = Cmd("/agree", 0)
                 msg.addButton(agree.str, agree::invoke)
             }

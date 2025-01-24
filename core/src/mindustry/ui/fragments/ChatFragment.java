@@ -640,6 +640,9 @@ public class ChatFragment extends Table{
         public float start, height;
         @Nullable public Seq<ClickableArea> buttons = new Seq<>(0); // This seq is deleted after 100 new messages to save ram
 
+        /** The real time at which the message was received */
+        public long receivedAt = Time.millis();
+
         /**
          * Creates a new ChatMessage.
          * @param message     The message as formatted by the server
