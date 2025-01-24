@@ -619,7 +619,8 @@ public class NetClient implements ApplicationListener{
         if(add){
             entity.add();
             netClient.addRemovedEntity(entity.id());
-            if (entity instanceof Player p && !ClientVars.syncing) Events.fire(new PlayerJoin(p));
+            // FINISHME: Find a way to determine the time between the WorldLoadEvent and actually having a screen and firing commands
+            if (entity instanceof Player p && Time.timeSinceMillis(ClientVars.lastJoinTime) > 3000 && !ClientVars.syncing) Events.fire(new PlayerJoin(p));
         }
     }
 
