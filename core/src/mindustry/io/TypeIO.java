@@ -358,6 +358,7 @@ public class TypeIO{
         //prevent buffer overflow by checking config length
         for(int i = 0; i < used; i++){
             BuildPlan plan = plans.get(i);
+            if(useConfigLocal && plan.configLocal) continue;
             if(plan.config instanceof byte[] b){
                 totalLength += b.length;
             }

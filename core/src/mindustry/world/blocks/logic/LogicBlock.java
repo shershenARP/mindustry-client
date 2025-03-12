@@ -9,6 +9,7 @@ import arc.graphics.g2d.Draw;
 import arc.graphics.g2d.Lines;
 import arc.math.*;
 import arc.math.geom.*;
+import arc.scene.ui.TextButton.*;
 import arc.scene.ui.layout.*;
 import arc.struct.Bits;
 import arc.struct.*;
@@ -18,6 +19,7 @@ import mindustry.ai.types.*;
 import mindustry.client.*;
 import mindustry.client.antigrief.*;
 import mindustry.client.navigation.*;
+import mindustry.client.ui.*;
 import mindustry.client.utils.*;
 import mindustry.core.*;
 import mindustry.gen.*;
@@ -28,6 +30,7 @@ import mindustry.logic.*;
 import mindustry.logic.LAssembler.*;
 import mindustry.logic.LExecutor.*;
 import mindustry.ui.*;
+import mindustry.ui.dialogs.*;
 import mindustry.ui.fragments.*;
 import mindustry.world.*;
 import mindustry.world.blocks.ConstructBlock.*;
@@ -667,6 +670,15 @@ public class LogicBlock extends Block{
         public void removeLinks(){
             ClientVars.configs.add(new ConfigRequest(this, compress(code, Seq.with())));
         }
+        public void importFromClipboard(){
+            try{
+                ClientVars.configs.add(new ConfigRequest(
+                    this, compress(Core.app.getClipboardText().replace("\r\n", "\n"), relativeConnections())
+                ));
+            }catch(Throwable e){
+                ui.showException(e);
+            }
+        }
 
         @Override
         public void buildConfiguration(Table table){
@@ -686,12 +698,41 @@ public class LogicBlock extends Block{
             table.button(Icon.trash, Styles.cleari, () -> {
                 if(Core.input.shift()) removeCode();
                 else ui.showConfirm("@confirm", "Are you sure you want to delete this processor's code?", this::removeCode);
-            }).size(40).tooltip("Remove code").disabled(b -> !ClientVars.configs.isEmpty());
+            }).size(40).tooltip("Remove code").disabled(b -> !accessible() || !ClientVars.configs.isEmpty());
 
             table.button(Icon.eyeOff, Styles.cleari, () -> {
                 if(Core.input.shift()) removeLinks();
                 else ui.showConfirm("@confirm", "Are you sure you want to remove all links?", this::removeLinks);
-            }).size(40).tooltip("Remove all links").disabled(b -> !ClientVars.configs.isEmpty());
+            }).size(40).tooltip("Remove all links").disabled(b -> !accessible() || !ClientVars.configs.isEmpty());
+
+            table.button(Icon.tree, Styles.cleari, () -> {
+                if(Core.input.shift()){
+                    importFromClipboard();
+                    new Toast(2).add("@client.processorimported");
+                    return;
+                }
+                BaseDialog dialog = new BaseDialog("@editor.export");
+                dialog.cont.pane(p -> {
+                    p.margin(10f);
+                    p.table(Tex.button, t -> {
+                        TextButtonStyle style = Styles.flatt;
+                        t.defaults().size(280f, 60f).left();
+
+                        t.button("@schematic.copy", Icon.copy, style, () -> {
+                            dialog.hide();
+                            Core.app.setClipboardText(code);
+                        }).marginLeft(12f);
+                        t.row();
+                        t.button("@schematic.copy.import", Icon.download, style, () -> {
+                            dialog.hide();
+                            importFromClipboard();
+                        }).marginLeft(12f);
+                    });
+                });
+
+                dialog.addCloseButton();
+                dialog.show();
+            }).size(40).tooltip("Copy/paste Code").disabled(b -> !accessible());
         }
 
         @Override

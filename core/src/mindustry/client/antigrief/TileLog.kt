@@ -186,8 +186,8 @@ private fun String.shorten() = take(MAX_NAME_LENGTH).let {
 }
 
 abstract class AbstractTileLog(tile: Tile, cause: Interactor, val block: Block) : TileLog(tile, cause) {
-    protected val eventPlayer: String = cause.shortName.stripColors().shorten()
-    protected val eventTarget: String = if (Core.settings.getBool("useiconslogs")) Fonts.getUnicodeStr(block.name) else block.localizedName
+    protected fun eventPlayer(): String = cause.shortName.stripColors().shorten()
+    protected fun eventTarget(): String = if (Core.settings.getBool("useiconslogs")) Fonts.getUnicodeStr(block.name) else block.localizedName
 }
 
 open class ConfigureTileLog(tile: Tile, cause: Interactor, block: Block, val rotation: Int, var configuration: Any?) : AbstractTileLog(tile, cause, block) {
@@ -196,7 +196,7 @@ open class ConfigureTileLog(tile: Tile, cause: Interactor, block: Block, val rot
         previous.configuration = configuration
     }
 
-    override fun toString() = "$eventPlayer ${Core.bundle.get("client.configured")} $eventTarget"
+    override fun toString() = "${eventPlayer()} ${Core.bundle.get("client.configured")} ${eventTarget()}"
     override fun add(sequence: TileLogSequence) {
         Core.app.post {
             configuration = Vars.world.tile(position.x, position.y)?.build?.config()
@@ -204,15 +204,15 @@ open class ConfigureTileLog(tile: Tile, cause: Interactor, block: Block, val rot
         }
     }
 
-    private val eventName: String = Core.bundle.get("client.configured").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.configured").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
 
-    override fun toShortString() = "$eventPlayer $eventName $eventTarget"
+    override fun toShortString() = "${eventPlayer()} ${eventName()} ${eventTarget()}"
 }
 
 class NodeLinkAddedTileLog(tile: Tile, cause: Interactor, block: Block, rotation: Int, configuration: Any?) : ConfigureTileLog(tile, cause, block, rotation, configuration) {
-    override fun toString() = "$eventTarget ${Core.bundle.get("client.configurednodelink")}"
-    private val eventName: String = Core.bundle.get("client.configurednodelink").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
-    override fun toShortString() = "$eventTarget $eventName"
+    override fun toString() = "${eventTarget()} ${Core.bundle.get("client.configurednodelink")}"
+    private fun eventName(): String = Core.bundle.get("client.configurednodelink").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
+    override fun toShortString() = "${eventTarget()} ${eventName()}"
 }
 
 open class TilePlacedLog(tile: Tile, cause: Interactor, block: Block, var rotation: Int = tile.build?.rotation ?: 0, var configuration: Any?, val isRootTile: Boolean) : AbstractTileLog(tile, cause, block) {
@@ -232,9 +232,9 @@ open class TilePlacedLog(tile: Tile, cause: Interactor, block: Block, var rotati
         return "${cause.name.stripColors()} ${Core.bundle.get("client.built")} ${block.localizedName}"
     }
 
-    private val eventName: String = Core.bundle.get("client.built").let { if(Core.settings.getBool("colorizelogs")) "[green]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.built").let { if(Core.settings.getBool("colorizelogs")) "[green]$it[]" else it }
 
-    override fun toShortString() = "$eventPlayer $eventName $eventTarget"
+    override fun toShortString() = "${eventPlayer()} ${eventName()} ${eventTarget()}"
 }
 
 class BlockPayloadDropLog(tile: Tile, cause: Interactor, block: Block, rotation: Int, configuration: Any?, origin: Boolean) : TilePlacedLog(tile, cause, block, rotation, configuration, origin) {
@@ -242,9 +242,9 @@ class BlockPayloadDropLog(tile: Tile, cause: Interactor, block: Block, rotation:
         return "${cause.name.stripColors()} ${Core.bundle.get("client.putdown")} ${block.localizedName}"
     }
 
-    private val eventName: String = Core.bundle.get("client.putdown").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.putdown").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
 
-    override fun toShortString() = "$eventPlayer $eventName $eventTarget"
+    override fun toShortString() = "${eventPlayer()} ${eventName()} ${eventTarget()}"
 }
 
 open class TileBreakLog(tile: Tile, cause: Interactor, block: Block) : AbstractTileLog(tile, cause, block) {
@@ -259,9 +259,9 @@ open class TileBreakLog(tile: Tile, cause: Interactor, block: Block) : AbstractT
         return "${cause.name.stripColors()} ${Core.bundle.get("client.broke")} ${block.localizedName}"
     }
 
-    private val eventName: String = Core.bundle.get("client.broke").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.broke").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
 
-    override fun toShortString() = "$eventPlayer $eventName $eventTarget"
+    override fun toShortString() = "${eventPlayer()} ${eventName()} ${eventTarget()}"
 }
 
 class BlockPayloadPickupLog(tile: Tile, cause: Interactor, block: Block) : TileBreakLog(tile, cause, block) {
@@ -269,36 +269,37 @@ class BlockPayloadPickupLog(tile: Tile, cause: Interactor, block: Block) : TileB
         return "${cause.name.stripColors()} ${Core.bundle.get("client.pickedup")} ${block.localizedName}"
     }
 
-    private val eventName: String = Core.bundle.get("client.pickedup").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.pickedup").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
 
-    override fun toShortString() = "$eventPlayer $eventName $eventTarget"
+    override fun toShortString() = "${eventPlayer()} ${eventName()} ${eventTarget()}"
 }
 class TileDestroyedLog(tile: Tile, block: Block) : TileBreakLog(tile, NoInteractor(), block) {
     override fun toString(): String {
         return "${block.localizedName} ${Core.bundle.get("client.destroyed")}"
     }
 
-    private val eventName: String = Core.bundle.get("client.destroyed").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.destroyed").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
 
-    override fun toShortString() = "$eventTarget $eventName"
+    override fun toShortString() = "${eventTarget()} ${eventName()}"
 }
 
-class UnitDestroyedLog(val tile: Tile, cause: Interactor, val unit: Unit, val isPlayer: Boolean) : TileLog(tile, cause) {
+class UnitDestroyedLog(val tile: Tile, cause: Interactor, unit: Unit, val isPlayer: Boolean) : TileLog(tile, cause) {
+    val unitType = unit.type
     override fun apply(previous: TileState) {
         //pass
     }
 
     override fun toString(): String {
-        return if(isPlayer) "${cause.name.stripColors()} ${Core.bundle.get("client.playerunitdeath")} ${unit.type?.localizedName ?: "null unit"}" else "${cause.name.stripColors()} ${Core.bundle.get("client.unitdeath")}"
+        return if(isPlayer) "${cause.name.stripColors()} ${Core.bundle.get("client.playerunitdeath")} ${unitType?.localizedName ?: "null unit"}" else "${cause.name.stripColors()} ${Core.bundle.get("client.unitdeath")}"
     }
 
-    private val eventController: String = "${cause.shortName.stripColors().take(16)}${if (cause.shortName.stripColors().length > 16) "..." else ""}"
-    private val eventNamePlayer: String = Core.bundle.get("client.playerunitdeath").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
-    private val eventNameLogic: String = Core.bundle.get("client.unitdeath").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
-    private val eventUnit: String = if(Core.settings.getBool("useiconslogs") && unit.type.name.isNotEmpty()) Fonts.getUnicodeStr(unit.type.name) else unit.type?.localizedName ?: "null unit"
+    private fun eventController(): String = "${cause.shortName.stripColors().take(16)}${if (cause.shortName.stripColors().length > 16) "..." else ""}"
+    private fun eventNamePlayer(): String = Core.bundle.get("client.playerunitdeath").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
+    private fun eventNameLogic(): String = Core.bundle.get("client.unitdeath").let { if(Core.settings.getBool("colorizelogs")) "[red]$it[]" else it }
+    private fun eventUnit(): String = if(Core.settings.getBool("useiconslogs") && unitType.name.isNotEmpty()) Fonts.getUnicodeStr(unitType.name) else unitType?.localizedName ?: "null unit"
 
     override fun toShortString(): String {
-        return if(isPlayer) "$eventController $eventNamePlayer $eventUnit" else "$eventController $eventNameLogic"
+        return if(isPlayer) "${eventController()} ${eventNamePlayer()} ${eventUnit()}" else "${eventController()} ${eventNameLogic()}"
     }
 }
 
@@ -311,7 +312,7 @@ class RotateTileLog(tile: Tile, cause: Interactor, block: Block, val rotation: I
         return "${cause.name.stripColors()} ${Core.bundle.get("client.rotated")} ${block.localizedName} ${Core.bundle.get(if (direction) "client.counterclockwise" else "client.clockwise")}"
     }
 
-    private val eventName: String = Core.bundle.get("client.rotated").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
+    private fun eventName(): String = Core.bundle.get("client.rotated").let { if(Core.settings.getBool("colorizelogs")) "[accent]$it[]" else it }
 
-    override fun toShortString() = "$eventPlayer $eventName $eventTarget"
+    override fun toShortString() = "${eventPlayer()} ${eventName()} ${eventTarget()}"
 }

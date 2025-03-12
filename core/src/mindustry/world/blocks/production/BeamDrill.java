@@ -9,6 +9,7 @@ import arc.struct.*;
 import arc.util.*;
 import arc.util.io.*;
 import mindustry.annotations.Annotations.*;
+import mindustry.core.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -273,7 +274,7 @@ public class BeamDrill extends Block{
             Draw.rect(block.region, x, y);
             Draw.rect(topRegion, x, y, rotdeg());
 
-            if(isPayload()) return;
+            if(isPayload() || Mathf.zero(Renderer.laserOpacity)) return;
             
             float opacity = (float) Core.settings.getInt("beamdrillopacity") / 100f;
 
