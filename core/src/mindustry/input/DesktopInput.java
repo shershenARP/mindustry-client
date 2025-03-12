@@ -32,12 +32,15 @@ import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.type.*;
 import mindustry.ui.*;
 import mindustry.ui.dialogs.*;
 import mindustry.ui.fragments.*;
 import mindustry.world.*;
 import mindustry.world.blocks.logic.*;
 import mindustry.world.blocks.payloads.*;
+import mindustry.world.blocks.storage.*;
+import mindustry.world.meta.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -71,6 +74,8 @@ public class DesktopInput extends InputHandler{
     /** Previously selected tile. */
     public Tile prevSelected;
     private long lastShiftZ;
+    /** Position where the player started drag-selecting. Overlaps with selectX/Y but is only used by client. */
+    public float dragX = Float.NaN, dragY;
 
     @Override
     public void buildUI(Group group){
@@ -433,10 +438,14 @@ public class DesktopInput extends InputHandler{
         if(input.keyDown(Binding.pan) && scene.getKeyboardFocus() == null){
             panCam = true;
             panning = true;
+            logicCutscene = false; // Cancel the cutscene
+            if(state.gameOver && !state.rules.pvp) followGameEndPan = false;
         }
 
         if(input.keyDown(Binding.freecam_modifier) && (input.axis(Binding.move_x) != 0f || input.axis(Binding.move_y) != 0f) && scene.getKeyboardFocus() == null){
             panning = true;
+            logicCutscene = false; // Cancel the cutscene
+            if(state.gameOver && !state.rules.pvp) followGameEndPan = false;
             Spectate.INSTANCE.setPos(null);
             float speed = Time.delta;
             speed *= camera.width;
@@ -470,7 +479,7 @@ public class DesktopInput extends InputHandler{
                 //TODO do not pan
                 Team corePanTeam = state.won ? state.rules.waveTeam : player.team();
                 Position coreTarget = state.gameOver && !state.rules.pvp && corePanTeam.data().lastCore != null ? corePanTeam.data().lastCore : null;
-                Core.camera.position.lerpDelta(coreTarget != null ? coreTarget : player, Core.settings.getBool("smoothcamera") ? 0.08f : 1f);
+                Core.camera.position.lerpDelta(coreTarget != null && followGameEndPan ? coreTarget : player, Core.settings.getBool("smoothcamera") ? 0.08f : 1f);
             }
 
             if(panCam){
@@ -590,7 +599,6 @@ public class DesktopInput extends InputHandler{
                 Unit on = selectedUnit(true);
                 var build = selectedControlBuild();
                 boolean hidingAirUnits = ClientVars.hidingAirUnits;
-                Vec2 mouseWorld;
                 if(on != null){
                     // FINISHME: This belongs in its own method, its also very messy
                     if (input.keyDown(Binding.control) && on.isAI() && state.rules.possessionAllowed) { // Ctrl + click: control unit
@@ -605,18 +613,33 @@ public class DesktopInput extends InputHandler{
                                 input.keyDown(Binding.control) ? AssistPath.Type.Cursor : AssistPath.Type.Regular,
                                 Core.settings.getBool("circleassist")));
                         shouldShoot = false;
-                    }else if(!isPlacing() && on.controller() instanceof LogicAI ai && ai.controller != null) { // Alt + click logic unit: spectate processor
-                        Spectate.INSTANCE.spectate(ai.controller);
-                        shouldShoot = false;
                     }
-                }else if(!isPlacing() && !hidingUnits && (on = Units.closestOverlap((mouseWorld = Core.input.mouseWorld()).x, mouseWorld.y, tilesize * 8f,
-                        u -> (!u.isFlying() || !hidingAirUnits) && mouseWorld.within(u, u.hitSize))) != null && on.controller() instanceof LogicAI ai && ai.controller != null){
-                    // This condition is meant to catch logic-controlled units of any team
-                    Spectate.INSTANCE.spectate(ai.controller);
-                    shouldShoot = false;
                 }else if(build != null && input.keyDown(Binding.control)){
                     Call.buildingControlSelect(player, build);
                     recentRespawnTimer = 1f;
+                }
+            }
+            if(input.keyTap(Binding.select)){
+                if(Core.input.shift()){
+                    dragX = Core.input.mouseWorld().x;
+                    dragY = Core.input.mouseWorld().y;
+                }else{
+                    dragX = Float.NaN;
+                }
+            }
+            if(!hidingUnits && input.shift() && input.keyRelease(Binding.select) && !isPlacing()
+                && !Float.isNaN(dragX) && Core.input.mouseWorld().dst2(dragX, dragY) < tilesize * tilesize){
+                Vec2 mouseWorld = Core.input.mouseWorld();
+                Unit on = selectedUnit(true);
+                if(on != null && on.controller() instanceof LogicAI ai && ai.controller != null) {
+                    Spectate.INSTANCE.spectate(ai.controller);
+                    shouldShoot = false;
+                } else if((on = Units.closestOverlap(mouseWorld.x, mouseWorld.y, tilesize * 8f,
+                    u -> (!u.isFlying() || !hidingAirUnits) && mouseWorld.within(u, u.hitSize))) != null &&
+                    on.controller() instanceof LogicAI ai && ai.controller != null){
+                    // This condition is meant to catch logic-controlled units of any team
+                    Spectate.INSTANCE.spectate(ai.controller);
+                    shouldShoot = false;
                 }
             }
         }
@@ -627,7 +650,21 @@ public class DesktopInput extends InputHandler{
             if(Core.input.keyTap(Binding.respawn) && !scene.hasDialog()){
                 controlledType = null;
                 recentRespawnTimer = 1f;
-                Call.unitClear(player);
+                var u = player.unit();
+                var closest = player.bestCore();
+                if(CoreBlock.preferredCoreType == null ||
+                    (!u.spawnedByCore &&
+                    ((u.dockedType != null && u.dockedType.coreUnitDock) ||
+                    (closest != null && ((CoreBlock)closest.block).unitType != null &&
+                        ((CoreBlock)closest.block).unitType.coreUnitDock))
+                    )
+                ){
+                    // Use original spawning mechanism for docking units
+                    Call.unitClear(player);
+                } else {
+                    // Send a packet that supports respawning at a specific block
+                    Call.buildingControlSelect(player, closest);
+                }
             }
         }
 
@@ -814,6 +851,10 @@ public class DesktopInput extends InputHandler{
             if(Core.input.shift()){
                 frozenPlans.clear();
             }else{
+                if(player.unit().plans.isEmpty()){
+                    lastSchematic = null;
+                    selectPlans.clear();
+                }
                 Player.persistPlans.clear();
                 player.unit().clearBuilding();
             }
@@ -829,11 +870,11 @@ public class DesktopInput extends InputHandler{
             else ui.toggleSchematicMenu();
         }
 
-        if(Core.input.keyTap(Binding.clear_building) || isPlacing()){
-            if(!Core.input.shift()) {
+        if(/*Core.input.keyTap(Binding.clear_building) || */isPlacing()){
+            // if(!Core.input.shift()) {
                 lastSchematic = null;
                 selectPlans.clear();
-            }
+            // }
         }
 
         if(!Core.scene.hasKeyboard() && selectX == -1 && selectY == -1 && schemX != -1 && schemY != -1){
@@ -878,8 +919,9 @@ public class DesktopInput extends InputHandler{
         if(Core.input.keyTap(Binding.pause_building)){
             if (Core.input.shift()) isFreezeQueueing = !isFreezeQueueing;
             else if (Core.input.ctrl()) {
-                Seq<BuildPlan> temp = frozenPlans.copy();
+                temp.set(frozenPlans);
                 flushPlans(temp, false, false, true);
+                temp.clear();
             }
             else {
                 isBuilding = !isBuilding;
@@ -909,7 +951,10 @@ public class DesktopInput extends InputHandler{
             if(Core.input.keyDown(Binding.break_block)){
                 mode = none;
             }else if(selectPlans.any()){
-                flushPlans(selectPlans, isFreezeQueueing, Core.input.keyDown(Binding.force_place_modifier), isFreezeQueueing);
+                flushPlans(
+                    temp.selectFrom(selectPlans, s -> s.block.isVisible() || s.block instanceof CoreBlock),
+                    isFreezeQueueing, Core.input.keyDown(Binding.force_place_modifier), isFreezeQueueing);
+                temp.clear();
             }else if(isPlacing()){
                 selectX = cursorX;
                 selectY = cursorY;

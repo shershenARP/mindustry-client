@@ -738,9 +738,13 @@ public class UI implements ApplicationListener, Loadable{
     }
 
     public static String formatTime(float ticks){
-        int s = (int)(ticks / Time.toSeconds) % 60; // Round seconds so they don't display weird
-        int m = (int)(ticks / Time.toMinutes) % 60;
+        int s = (int)(ticks / Time.toSeconds); // Round seconds so they don't display weird
+        int m = (int)(ticks / Time.toMinutes);
         int h = (int)(ticks / Time.toHours);
+        if(h == Integer.MAX_VALUE) return "∞";
+        // if m == int max, it will underflow to positive. Now use this mask to set m to 0
+        m = (m & ((-2 - m) >> 31)) % 60;
+        s = (s & ((-2 - s) >> 31)) % 60;
         String out = (h == 0 ? "" : h + "h") + (m == 0 ? "" : m + "m") + (s == 0 ? "" : s + "s");
         return out.isEmpty() ? "0s" : out;
     }

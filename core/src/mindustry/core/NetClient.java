@@ -15,6 +15,7 @@ import mindustry.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.client.*;
 import mindustry.client.communication.*;
+import mindustry.client.ui.*;
 import mindustry.client.utils.*;
 import mindustry.core.GameState.*;
 import mindustry.entities.*;
@@ -275,6 +276,7 @@ public class NetClient implements ApplicationListener{
             } else {
                 // server message, unformatted is ignored
                 output = ui.chatfrag.addMessage(message, null, null, "", "");
+                Server.current.handleVoteButtons(output);
             }
 
             findCoords(output);
@@ -372,7 +374,12 @@ public class NetClient implements ApplicationListener{
             var res = matcher.toMatchResult();
             if(res.start() < start) continue; // .find(start) is cursed
             var url = res.group(1) == null ? "https://" + res.group() : res.group(); // Add https:// if missing protocol
-            msg.addButton(res.start(), res.end(), () -> Menus.openURI(url));
+            msg.addButton(res.start(), res.end(), () -> {
+                if(Core.input.shift()){
+                    Core.app.setClipboardText(url);
+                    new Toast(3).add(Core.bundle.get("copied"));
+                } else Menus.openURI(url);
+            });
         }
         return msg;
     }
@@ -612,7 +619,8 @@ public class NetClient implements ApplicationListener{
         if(add){
             entity.add();
             netClient.addRemovedEntity(entity.id());
-            if (entity instanceof Player p && !ClientVars.syncing) Events.fire(new PlayerJoin(p));
+            // FINISHME: Find a way to determine the time between the WorldLoadEvent and actually having a screen and firing commands
+            if (entity instanceof Player p && Time.timeSinceMillis(ClientVars.lastJoinTime) > 3000 && !ClientVars.syncing) Events.fire(new PlayerJoin(p));
         }
     }
 

@@ -460,6 +460,7 @@ public class SettingsMenuDialog extends BaseDialog{
         client.checkPref("autoohno", false);
         client.checkPref("schematicmenuexporttags", true);
         client.checkPref("schematicbrowserimporttags", true);
+        client.checkPref("schematicuicarryover", true);
 
         if (settings.getBool("client-experimentals") || OS.hasProp("policone")) {
             client.category("experimental");
@@ -1105,6 +1106,11 @@ public class SettingsMenuDialog extends BaseDialog{
 
         // Elements are actually added below
         public static class Category extends Setting{
+            protected final static ImageButton.ImageButtonStyle style = new ImageButton.ImageButtonStyle(){{
+                imageDownColor = Pal.accent;
+                imageOverColor = Pal.accent;
+                imageUpColor = Pal.accent;
+            }};
             protected Table children = new Table();
             private final Collapser collapser = new Collapser(children, settings.getBool("settingscategory-" + name + "-enabled", true));
 
@@ -1115,8 +1121,20 @@ public class SettingsMenuDialog extends BaseDialog{
 
             @Override
             public void add(SettingsTable table){
+                ImageButton[] arrowButton = {null};
                 table.add("").row(); // Add a cell first as .row doesn't work if there are no cells in the current row.
-                table.check("[accent]" + title, !collapser.isCollapsed(), b -> { collapser.setCollapsed(!b); settings.put("settingscategory-" + name + "-enabled", !b); });
+                final Runnable onClicked = () -> {
+                    collapser.toggle();
+                    settings.put("settingscategory-" + name + "-enabled", collapser.isCollapsed());
+                    arrowButton[0].getStyle().imageUp = collapser.isCollapsed() ? Icon.downOpen : Icon.upOpen;
+                };
+                table.table(t -> {
+                    t.add(title).center().growX().color(Pal.accent).get().clicked(onClicked);
+                    (arrowButton[0] = t.button(Icon.downOpen, style, onClicked).size(10f).right().padRight(10f).get())
+                        .getStyle().imageUp = collapser.isCollapsed() ? Icon.downOpen : Icon.upOpen;
+                }).growX();
+                table.row();
+                table.image(Tex.whiteui, Pal.accent).growX().height(3f).padTop(4f).padBottom(4f);
                 table.row();
                 table.add(collapser).left();
                 table.row();
@@ -1172,7 +1190,7 @@ public class SettingsMenuDialog extends BaseDialog{
             public void add(SettingsTable table){
                 TextField field = new TextField(settings.getString(name));
                 field.setMessageText(def);
-                field.typed(c -> {
+                field.changed(() -> {
                     settings.put(name, field.getText());
                     if(changed != null){
                         changed.get(field.getText());
@@ -1197,7 +1215,7 @@ public class SettingsMenuDialog extends BaseDialog{
                 TextArea area = new TextArea(settings.getString(name));
                 area.setPrefRows(5);
 
-                area.typed(c -> {
+                area.changed(() -> {
                     settings.put(name, area.getText());
                     if(changed != null){
                         changed.get(area.getText());
