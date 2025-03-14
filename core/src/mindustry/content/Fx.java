@@ -471,6 +471,7 @@ public class Fx{
 
     missileTrailSmoke = new Effect(180f, 300f, b -> {
         float intensity = 2f;
+        if(ClientVars.hidingUnits || ClientVars.hidingAirUnits) return;
 
         color(b.color, 0.7f);
         for(int i = 0; i < 4; i++){
