@@ -350,7 +350,7 @@ fun setupCommands() {
         }
     }
 
-    register("clearghosts [c]", Core.bundle.get("client.command.clearghosts.description")) { args, player -> 
+    register("clearghosts [c]", Core.bundle.get("client.command.clearghosts.description")) { args, player ->
         val confirmed = args.any() && args[0].startsWith("c") // Don't clear by default
         val all = confirmed && isDeveloper() && args[0] == "clear"
         val plans = mutableListOf<Int>()
@@ -394,11 +394,11 @@ fun setupCommands() {
         // FINISHME: success message
     }
 
-    register("c <message...>", Core.bundle.get("client.command.c.description")) { args, _ -> 
+    register("c <message...>", Core.bundle.get("client.command.c.description")) { args, _ ->
         Main.send(ClientMessageTransmission(args[0]).apply { addToChatfrag() })
     }
 
-    register("mapinfo [team]", Core.bundle.get("client.command.mapinfo.description")) { args, player -> 
+    register("mapinfo [team]", Core.bundle.get("client.command.mapinfo.description")) { args, player ->
         val team = if (args.isEmpty()) player.team() else findTeam(args[0])
         player.sendMessage(with(state) {
             """
@@ -432,7 +432,7 @@ fun setupCommands() {
             }
     }
 
-    register("unloaders <item> [enabledOnly] [setOnly]", Core.bundle.get("client.command.unloaders.description")) { args, player -> 
+    register("unloaders <item> [enabledOnly] [setOnly]", Core.bundle.get("client.command.unloaders.description")) { args, player ->
         val item = findItem(args[0])
         val enabledOnly = args.size < 2 || parseBool(args[1])
         val setOnly = args.size < 3 || parseBool(args[2])
@@ -713,7 +713,7 @@ fun setupCommands() {
         Server.ohnoTask?.cancel()
         Server.ohnoTask = Server.ohno()
     }
-    
+
     // Special commands
 
     register("seer", "client.command.seer.description".bundle()) { _, player ->
