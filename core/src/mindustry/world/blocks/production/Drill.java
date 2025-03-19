@@ -134,7 +134,8 @@ public class Drill extends Block{
 
         if(returnItem != null){
             float rate = 60f / getDrillTime(returnItem) * returnCount;
-            String boostedRate = liquidBoostIntensity != 1 ? " ([white]" + Liquids.water.emoji() + "[]" + Strings.fixed(rate * liquidBoostIntensity * liquidBoostIntensity, 3)  + ")" : "";
+            ConsumeLiquid boost = findConsumer(f -> f.booster && f instanceof ConsumeLiquid);
+            String boostedRate = liquidBoostIntensity != 1 ? " ([white]" + (boost == null || !boost.liquid.hasEmoji() ? Liquids.water.emoji() : boost.liquid.emoji()) + "[]" + Strings.fixed(rate * liquidBoostIntensity * liquidBoostIntensity, 3)  + ")" : "";
             float width = drawPlaceText(Core.bundle.format("bar.drillspeed", Strings.fixed(rate, 3) + boostedRate), x, y, valid);
             float dx = x * tilesize + offset - width/2f - 4f, dy = y * tilesize + offset + size * tilesize / 2f + 5, s = iconSmall / 4f;
             Draw.mixcol(Color.darkGray, 1f);
