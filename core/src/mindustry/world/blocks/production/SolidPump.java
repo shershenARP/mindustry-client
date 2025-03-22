@@ -7,6 +7,7 @@ import arc.util.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
 import mindustry.entities.*;
+import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
@@ -41,6 +42,17 @@ public class SolidPump extends Pump{
 
         if(attribute != null){
             drawPlaceText(Core.bundle.format("bar.efficiency", Math.round(Math.max((sumAttribute(attribute, x, y)) / size / size + percentSolid(x, y) * baseEfficiency, 0f) * 100)), x, y, valid);
+        }
+    }
+
+    @Override
+    public void drawPlanConfigTop(BuildPlan plan, Eachable<BuildPlan> list){
+        if(!plan.worldContext) return;
+        Tile tile = plan.tile();
+        if(tile == null) return;
+        if(attribute != null){
+            Drawf.planEfficiency(this, tile.x, tile.y, Pal.accent,
+                Math.round(Math.max((sumAttribute(attribute, tile.x, tile.y)) / size / size + percentSolid(tile.x, tile.y) * baseEfficiency, 0f) * 100) + "%");
         }
     }
 
