@@ -186,7 +186,7 @@ public class JoinDialog extends BaseDialog{
             inner.button(Icon.upOpen, Styles.emptyi, () -> {
                 moveRemote(server, -1);
 
-            }).margin(3f).padTop(6f).top().right();
+            }).margin(3f).pad(2).padTop(6f).top().right();
 
             inner.button(Icon.downOpen, Styles.emptyi, () -> {
                 moveRemote(server, +1);
@@ -209,7 +209,7 @@ public class JoinDialog extends BaseDialog{
                     setupRemote();
                     refreshRemote();
                 });
-            }).margin(3f).pad(2).pad(6).top().right();
+            }).margin(3f).pad(2).padTop(6).top().right();
 
             button.row();
 
@@ -325,7 +325,7 @@ public class JoinDialog extends BaseDialog{
             t.add("[lightgray]" + Core.bundle.format("save.map", host.mapname) + "[lightgray] / " + (host.modeName == null ? host.mode.toString() : host.modeName)).width(twidth).left().ellipsis(true).row();
 
             if(host.ping > 0){
-                t.add(Iconc.chartBar + " " + host.ping + "ms" + "   " + host.address).style(Styles.outlineLabel).color(Pal.gray).left();
+                t.add(Iconc.chartBar + " " + host.ping + "ms" + "   " + host.address + ":" + host.port).style(Styles.outlineLabel).color(Pal.gray).left();
             }
         }).growY().growX().left().bottom();
     }
