@@ -6,6 +6,7 @@ import arc.math.*;
 import arc.util.*;
 import mindustry.content.*;
 import mindustry.entities.*;
+import mindustry.entities.units.*;
 import mindustry.game.*;
 import mindustry.graphics.*;
 import mindustry.type.*;
@@ -56,6 +57,20 @@ public class ThermalGenerator extends PowerGenerator{
 
         if(displayEfficiency){
             drawPlaceText(Core.bundle.formatFloat("bar.powerbalance", powerProduction * sumAttribute(attribute, x, y) * 60, 1), x, y, valid);
+        }
+    }
+
+    @Override
+    public void drawPlanConfigTop(BuildPlan plan, Eachable<BuildPlan> list){
+        if(!plan.worldContext) return;
+        Tile tile = plan.tile();
+        if(tile == null) return;
+        if(attribute != null){
+            float sum = sumAttribute(attribute, tile.x, tile.y);
+            if(sum > 0){
+                Drawf.planEfficiency(this, tile.x, tile.y, Pal.accent,
+                    String.format("%.1f", powerProduction * sum * 60, 0f));
+            }
         }
     }
 

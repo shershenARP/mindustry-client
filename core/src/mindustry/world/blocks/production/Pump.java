@@ -5,7 +5,9 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.util.*;
+import mindustry.entities.units.*;
 import mindustry.game.*;
+import mindustry.graphics.*;
 import mindustry.logic.*;
 import mindustry.type.*;
 import mindustry.world.*;
@@ -65,6 +67,32 @@ public class Pump extends LiquidBlock{
             Draw.rect(liquidDrop.fullIcon, dx, dy - 1, s * ratio, s);
             Draw.reset();
             Draw.rect(liquidDrop.fullIcon, dx, dy, s * ratio, s);
+        }
+    }
+
+    @Override
+    public void drawPlanConfigTop(BuildPlan plan, Eachable<BuildPlan> list){
+        if(!plan.worldContext) return;
+        Tile tile = plan.tile();
+        if(tile == null) return;
+
+        float amount = 0f;
+        Liquid liquidDrop = null;
+
+        for(Tile other : tile.getLinkedTilesAs(this, tempTiles)){
+            if(canPump(other)){
+                var floor = other.floor();
+                if(liquidDrop != null && floor.liquidDrop != liquidDrop){
+                    liquidDrop = null;
+                    break;
+                }
+                if(liquidDrop == null) liquidDrop = floor.liquidDrop;
+                amount += floor.liquidMultiplier;
+            }
+        }
+
+        if(liquidDrop != null){
+            Drawf.planEfficiency(this, tile.x, tile.y, liquidDrop.color, String.format("%.1f", amount * pumpAmount * 60f));
         }
     }
 
