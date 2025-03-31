@@ -16,6 +16,7 @@ import mindustry.client.utils.*
 import mindustry.core.*
 import mindustry.game.EventType.*
 import mindustry.gen.*
+import mindustry.input.*
 import mindustry.logic.*
 import mindustry.net.*
 import mindustry.type.*
@@ -43,15 +44,15 @@ class ClientLogic {
                 app.post {
                     val arg = switchTo?.removeFirstOrNull()
                     if (arg != null && arg is Host) {
-                    when (val vote = settings.getInt("automapvote")) {
-                        1, 2, 3 -> Server.current.mapVote(vote - 1)
-                        4 -> Server.current.mapVote(Random.nextInt(0..2))
-                    }
-                            NetClient.connect(arg.address, arg.port)
+                        when (val vote = settings.getInt("automapvote")) {
+                            1, 2, 3 -> Server.current.mapVote(vote - 1)
+                            4 -> Server.current.mapVote(Random.nextInt(0..2))
+                        }
+                        NetClient.connect(arg.address, arg.port)
                     } else if (arg is UnitType) {
                         ui.unitPicker.pickUnit(arg)
-                            switchTo = null
-                        }
+                        switchTo = null
+                    }
                     executeOrSendText(settings.getString("gamejointext"))
                 }
             }, .1F)
@@ -109,11 +110,11 @@ class ClientLogic {
         Events.on(ClientLoadEvent::class.java) { // Run when the client finishes loading FINISHME: Look into optimizing this, it takes half of the entire ClientLoadEvent, ~250ms on my machine
             handleMenuTasksAsync()
             clientThread.post {
-            val changeHash = files.internal("changelog").readString().replace("\r\n", "\n").hashCode() // Display changelog if the file contents have changed as well as on first run
+                val changeHash = files.internal("changelog").readString().replace("\r\n", "\n").hashCode() // Display changelog if the file contents have changed as well as on first run
                 Core.app.post {
-            if (settings.getInt("changeHash") != changeHash) {
-                ChangelogDialog.show()
-                settings.put("changeHash", changeHash)
+                    if (settings.getInt("changeHash") != changeHash) {
+                        ChangelogDialog.show()
+                        settings.put("changeHash", changeHash)
                     }
                 }
             }
@@ -171,7 +172,10 @@ class ClientLogic {
         Events.on(GameOverEventClient::class.java) {
             if (net.client()) {
                 // Afk players will start mining at the end of a game (kind of annoying but worth it)
-                if ((Navigation.currentlyFollowing as? BuildPath)?.mineItems == null && !CustomMode.defense()) Navigation.follow(MinePath(args = "copper lead beryllium graphite", newGame = true))
+                if ((Navigation.currentlyFollowing as? BuildPath)?.mineItems == null && !CustomMode.defense()) {
+                    (control.input as? DesktopInput)?.moved = false
+                    Navigation.follow(MinePath(args = "copper lead beryllium graphite", newGame = true))
+                }
 
                 // Save maps on game over if the setting is enabled
                 if (settings.getBool("savemaponend")) control.saves.addSave(state.map.name())

@@ -23,7 +23,14 @@ class AssistPath(val assisting: Player?, val type: Type = Type.Regular, var circ
     private var theta: Float = 0F
     private var circleRadius: Float = 0F
 
+    init {
+        lastAssisted = null
+        lastType = type
+    }
+
     companion object { // Events.remove is weird, so we just create the hooks once instead
+        private var lastType: Type = Type.Regular
+        private var lastAssisted: String? = null
         init {
             Events.on(EventType.DepositEvent::class.java) {
                 val assisting = (Navigation.currentlyFollowing as? AssistPath)?.assisting ?: return@on
@@ -34,6 +41,12 @@ class AssistPath(val assisting: Player?, val type: Type = Type.Regular, var circ
                 val assisting = (Navigation.currentlyFollowing as? AssistPath)?.assisting ?: return@on
                 if (it.player != assisting || ratelimitRemaining <= 1) return@on
                 Call.requestItem(player, it.tile, it.item, it.amount)
+            }
+            Events.on(EventType.UnitChangeEventClient::class.java) {
+                if (it.player.hasLoadedMap || it.oldUnit != Nulls.unit || it.player.name != lastAssisted) return@on
+                if (Navigation.currentlyFollowing == null && lastAssisted != null && (control.input as? DesktopInput)?.moved == false) {
+                    Navigation.follow(AssistPath(it.player, lastType, Core.settings.getBool("circleassist")))
+                }
             }
         }
     }
@@ -141,6 +154,10 @@ class AssistPath(val assisting: Player?, val type: Type = Type.Regular, var circ
     }
 
     override fun progress(): Float {
+        if (assisting?.isAdded == false) {
+            (control.input as? DesktopInput)?.moved = false
+            lastAssisted = assisting.name
+        }
         return if (assisting == null || !assisting.isAdded) 1f else 0f
     }
 
