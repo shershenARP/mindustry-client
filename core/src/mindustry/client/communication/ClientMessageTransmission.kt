@@ -32,7 +32,7 @@ class ClientMessageTransmission : Transmission {
         this.id = id
         this.senderID = senderID
         val buf = input.buffer()
-        message = buf.string
+        message = buf.string.take(500)
         certSN = buf.byteArray.run { if (isEmpty()) null else this }
         signature = buf.byteArray.run { if (isEmpty()) null else this }
         timestamp = buf.instant
@@ -47,6 +47,7 @@ class ClientMessageTransmission : Transmission {
     }
 
     constructor(message: String) {
+        val limit = message.take(500)
         val certName = Main.keyStorage.cert()?.readableName
         if (certName != null) {
             sender = certName
@@ -54,9 +55,9 @@ class ClientMessageTransmission : Transmission {
         } else sender = Vars.player.name
         senderID = Vars.player.id
         timestamp = Instant.now()
-        this.message = message
+        this.message = limit
         this.certSN = Main.keyStorage.cert()?.serialNumber?.toByteArray()
-        this.signature = Main.signatures.sign(toSignable(senderID, message, timestamp))
+        this.signature = Main.signatures.sign(toSignable(senderID, limit, timestamp))
         validity = VALID
     }
 
