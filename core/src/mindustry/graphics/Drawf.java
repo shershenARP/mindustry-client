@@ -504,8 +504,8 @@ public class Drawf{
         font.getData().setScale(1f / 4f / 1.5f / Scl.scl(1f));
 
         font.setColor(color);
-        float drawX = (tileX - t.size / 2f) * tilesize + t.offset + 3;
-        float drawY = (tileY - t.size / 2f) * tilesize + t.offset + 3 + Math.abs(font.getData().lineHeight) / 2;
+        float drawX = (tileX - t.size / 2f) * tilesize + t.offset + t.size;
+        float drawY = (tileY - t.size / 2f) * tilesize + t.offset + t.size + font.getData().capHeight;
         font.draw(text, drawX, drawY, Align.left);
 
         font.setUseIntegerPositions(ints);
