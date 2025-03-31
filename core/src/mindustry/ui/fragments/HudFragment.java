@@ -323,6 +323,8 @@ public class HudFragment{
                 IntFormat memnative = new IntFormat("memory2");
                 IntFormat players = new IntFormat("client.players");
                 IntFormat plans = new IntFormat("client.plans");
+                IntFormat configs = new IntFormat("client.configs");
+                IntFormat ratelimit = new IntFormat("client.ratelimit");
 
                 if(android){
                     info.label(() -> memnative.get((int)(Core.app.getJavaHeap() / 1024 / 1024), (int)(Core.app.getNativeHeap() / 1024 / 1024))).left().style(Styles.outlineLabel).name("memory2");
@@ -354,7 +356,11 @@ public class HudFragment{
                 .style(Styles.outlineLabel).name("plans");
                 info.row();
 
-                info.label(() -> "Rate Limit: " + ClientVars.ratelimitRemaining).left().style(Styles.outlineLabel).row();
+                info.label(() -> configs.get(ClientVars.configs.size())).left().style(Styles.outlineLabel).name("configs");
+                info.row();
+
+                info.label(() -> ratelimit.get(ClientVars.ratelimitRemaining)).left().style(Styles.outlineLabel).name("ratelimit");
+                info.row();
 
                 info.label(() -> players.get(Groups.player.size(), ui.join.lastHost == null ? 0 : ui.join.lastHost.playerLimit)).visible(net::active).left() // Player count
                 .style(Styles.outlineLabel).name("players");
