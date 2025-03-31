@@ -8,6 +8,7 @@ import mindustry.Vars.*
 import mindustry.client.utils.*
 import mindustry.game.*
 import mindustry.gen.*
+import mindustry.input.*
 import mindustry.type.*
 import mindustry.world.*
 
@@ -121,7 +122,7 @@ class MinePath @JvmOverloads constructor(
         if ((waypoints.waypoints.lastOrNull()?.dst(player) ?: 0F) > tilesize * 3) waypoints.draw()
     }
 
-    override fun progress() = 0F
+    override fun progress() = if (newGame && (control.input as? DesktopInput)?.moved == true) 1f else 0f
 
     override fun reset() = Unit
 
