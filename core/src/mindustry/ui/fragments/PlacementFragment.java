@@ -483,7 +483,7 @@ public class PlacementFragment{
                         u.left();
                         int[] curCount = {0};
                         UnitCommand[] currentCommand = {null};
-                        var commands = new Seq<UnitCommand>();
+                        var commands = new ObjectMap<UnitCommand, Boolean[]>();
 
                         rebuildCommand = () -> {
                             u.clearChildren();
@@ -494,7 +494,6 @@ public class PlacementFragment{
                                     counts[unit.type.id] ++;
                                 }
                                 commands.clear();
-                                boolean firstCommand = false;
                                 Table unitlist = u.table().growX().left().get();
                                 unitlist.left();
 
@@ -518,20 +517,21 @@ public class PlacementFragment{
 
                                             b.addListener(listener);
                                             b.addListener(new HandCursorListener());
-                                            //gray on hover
-                                            b.update(() -> ((Group)b.getChildren().first()).getChildren().first().setColor(listener.isOver() ? Color.lightGray : Color.white));
+                                            var boolrefs = new Boolean[type.commands.length][];
+                                            for(int j = 0; j < type.commands.length; j++){
+                                                boolrefs[j] = commands.get(type.commands[j], () -> new Boolean[]{false});
+                                            }
+                                            b.update(() ->
+                                                // gray on hover, green on command hover
+                                                ((Group)b.getChildren().first()).getChildren().first().setColor(
+                                                    Structs.contains(boolrefs, ref -> ref[0]) ? Pal.heal :
+                                                    listener.isOver() ? Color.lightGray : Color.white
+                                                )
+                                            );
                                         });
 
                                         if(++col % 7 == 0){
                                             unitlist.row();
-                                        }
-
-                                        if(!firstCommand){
-                                            commands.add(type.commands);
-                                            firstCommand = true;
-                                        }else{
-                                            //remove commands that this next unit type doesn't have
-                                            commands.removeAll(com -> !Structs.contains(type.commands, com));
                                         }
                                     }
                                 }
@@ -540,15 +540,26 @@ public class PlacementFragment{
                                     u.row();
 
                                     u.table(coms -> {
-                                        for(var command : commands){
+                                        for(var commandEntry : commands){
+                                            var command = commandEntry.key;
+                                            var ref = commandEntry.value;
                                             coms.button(Icon.icons.get(command.icon, Icon.cancel), Styles.clearNoneTogglei, () -> {
                                                 IntSeq ids = new IntSeq();
                                                 for(var unit : units){
-                                                    ids.add(unit.id);
+                                                    if(Structs.contains(unit.type.commands, command)){
+                                                        ids.add(unit.id);
+                                                    }
                                                 }
 
                                                 Call.setUnitCommand(Vars.player, ids.toArray(), command);
-                                            }).checked(i -> currentCommand[0] == command).size(50f).tooltip(command.localized());
+                                            }).size(50f).tooltip(command.localized()).with(b -> {
+                                                var listener = new ClickListener();
+                                                b.addListener(listener);
+                                                b.update(() -> {
+                                                    ref[0] = listener.isOver();
+                                                    b.setChecked(currentCommand[0] == command);
+                                                });
+                                            });
                                         }
                                     }).fillX().padTop(4f).left();
                                 }

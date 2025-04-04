@@ -64,6 +64,7 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
     transient boolean assisting;
     transient @Nullable TraceInfo trace;
     transient @Nullable String serverID;
+    transient boolean hasLoadedMap;
 
     public boolean isBuilder(){
         return unit.canBuild();
@@ -281,6 +282,7 @@ abstract class PlayerComp implements UnitController, Entityc, Syncc, Timerc, Dra
 
         Events.fire(new UnitChangeEvent(self(), unit)); // Kept for vanilla compatibility
         Events.fire(new UnitChangeEventClient(self(), unit, oldUnit)); // Client needs the old unit.
+        if(!hasLoadedMap && unit != Nulls.unit && oldUnit == Nulls.unit) hasLoadedMap = true;
     }
 
     boolean dead(){

@@ -16,6 +16,7 @@ import mindustry.client.utils.*
 import mindustry.core.*
 import mindustry.game.EventType.*
 import mindustry.gen.*
+import mindustry.input.*
 import mindustry.logic.*
 import mindustry.net.*
 import mindustry.type.*
@@ -41,34 +42,18 @@ class ClientLogic {
 
             Timer.schedule({
                 app.post {
-                    when (val vote = settings.getInt("automapvote")) {
-                        1, 2, 3 -> Server.current.mapVote(vote - 1)
-                        4 -> Server.current.mapVote(Random.nextInt(0..2))
-                    }
                     val arg = switchTo?.removeFirstOrNull()
-                    if (arg != null) {
-                        if (arg is Host) {
-                            NetClient.connect(arg.address, arg.port)
-                        } else {
-                            if (arg is UnitType) ui.unitPicker.pickUnit(arg)
-                            switchTo = null
+                    if (arg != null && arg is Host) {
+                        when (val vote = settings.getInt("automapvote")) {
+                            1, 2, 3 -> Server.current.mapVote(vote - 1)
+                            4 -> Server.current.mapVote(Random.nextInt(0..2))
                         }
+                        NetClient.connect(arg.address, arg.port)
+                    } else if (arg is UnitType) {
+                        ui.unitPicker.pickUnit(arg)
+                        switchTo = null
                     }
-                    if (settings.getString("gamejointext")?.isNotBlank() == true) {
-                        // Separate commands should be delimited with ;. Semicolons within commands should be expressed as \\;.
-                        val input = settings.getString("gamejointext").split("(?<!\\\\);".toRegex())
-                        val out = StringBuilder()
-                        Log.debug("The split input: $input")
-                        input.forEach { // Try running each bit as a command, this code is terribly inefficient but should get the job done so I don't care
-                            val clean = (if (!it.endsWith("\\\\;")) it.removeSuffix(";") else it) // Remove the ending semicolon on each command
-                                    .replace("\\\\;", ";") // Replace \\; with ;
-                            Log.debug("Input part: '$it' ('$clean')")
-                            val res = ChatFragment.handleClientCommand(clean, false)
-                            if (res.type == CommandHandler.ResponseType.noCommand) out.append(clean) // If the command doesn't exist we pass the text through to the output, otherwise we don't pass it to the output. this is kind of hacky but i don't care.
-                        }
-                        Log.debug("Sent message: $out")
-                        if (out.isNotBlank()) Call.sendChatMessage(out.toString())
-                    }
+                    executeOrSendText(settings.getString("gamejointext"))
                 }
             }, .1F)
 
@@ -88,10 +73,11 @@ class ClientLogic {
                 Server.ohnoTask?.cancel()
                 Server.ohnoTask = if (Server.fish() && settings.getBool("autoohno", false)) Server.ohno() else null
                 frozenPlans.clear()
-
+                app.post {
                 when (val vote = settings.getInt("automapvote")) {
                     1, 2, 3 -> Server.current.mapVote(vote - 1)
                     4 -> Server.current.mapVote(Random.nextInt(0..2))
+                    }
                 }
             }
             configs.clear()
@@ -123,10 +109,14 @@ class ClientLogic {
 
         Events.on(ClientLoadEvent::class.java) { // Run when the client finishes loading FINISHME: Look into optimizing this, it takes half of the entire ClientLoadEvent, ~250ms on my machine
             handleMenuTasksAsync()
-            val changeHash = files.internal("changelog").readString().replace("\r\n", "\n").hashCode() // Display changelog if the file contents have changed as well as on first run
-            if (settings.getInt("changeHash") != changeHash) {
-                ChangelogDialog.show()
-                settings.put("changeHash", changeHash)
+            clientThread.post {
+                val changeHash = files.internal("changelog").readString().replace("\r\n", "\n").hashCode() // Display changelog if the file contents have changed as well as on first run
+                Core.app.post {
+                    if (settings.getInt("changeHash") != changeHash) {
+                        ChangelogDialog.show()
+                        settings.put("changeHash", changeHash)
+                    }
+                }
             }
 
             if (settings.getBool("discordrpc")) platform.startDiscord()
@@ -182,7 +172,10 @@ class ClientLogic {
         Events.on(GameOverEventClient::class.java) {
             if (net.client()) {
                 // Afk players will start mining at the end of a game (kind of annoying but worth it)
-                if ((Navigation.currentlyFollowing as? BuildPath)?.mineItems == null && !CustomMode.defense()) Navigation.follow(MinePath(args = "copper lead beryllium graphite", newGame = true))
+                if ((Navigation.currentlyFollowing as? BuildPath)?.mineItems == null && !CustomMode.defense()) {
+                    (control.input as? DesktopInput)?.moved = false
+                    Navigation.follow(MinePath(args = "copper lead beryllium graphite", newGame = true))
+                }
 
                 // Save maps on game over if the setting is enabled
                 if (settings.getBool("savemaponend")) control.saves.addSave(state.map.name())
@@ -190,9 +183,9 @@ class ClientLogic {
 
             // FINISHME: Make this work in singleplayer
             if (it.winner == player.team()) {
-                if (settings.getString("gamewintext")?.isNotBlank() == true) Call.sendChatMessage(settings.getString("gamewintext"))
+                executeOrSendText(settings.getString("gamewintext"))
             } else {
-                if (settings.getString("gamelosetext")?.isNotBlank() == true) Call.sendChatMessage(settings.getString("gamelosetext"))
+                executeOrSendText(settings.getString("gamelosetext"))
             }
         }
 
@@ -272,5 +265,21 @@ class ClientLogic {
         Events.on(ResetEvent::class.java) {
             (batch as? SortedSpriteBatch)?.reset()
         }
+    }
+
+    private fun executeOrSendText(text: String?){
+        if(text?.isBlank() != false) return
+        val input = text.split("(?<!\\\\);".toRegex())
+        val out = StringBuilder()
+        Log.debug("The split input: $input")
+        input.forEach { // Try running each bit as a command, this code is terribly inefficient but should get the job done so I don't care
+            val clean = (if (!it.endsWith("\\\\;")) it.removeSuffix(";") else it) // Remove the ending semicolon on each command
+                    .replace("\\\\;", ";") // Replace \\; with ;
+            Log.debug("Input part: '$it' ('$clean')")
+            val res = ChatFragment.handleClientCommand(clean, false)
+            if (res.type == CommandHandler.ResponseType.noCommand) out.append(clean) // If the command doesn't exist we pass the text through to the output, otherwise we don't pass it to the output. this is kind of hacky but i don't care.
+        }
+        Log.debug("Sent message: $out")
+        if (out.isNotBlank()) Call.sendChatMessage(out.toString())
     }
 }
