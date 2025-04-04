@@ -926,8 +926,8 @@ public class SettingsMenuDialog extends BaseDialog{
         }
 
         public void rebuild(){ // FINISHME: Ideally, we should still be able to search for settings even if a mod has added non settings to the table. Perhaps we could have a Setting type that just wraps a runnable that adds the element being added in add()?
-            if(!canRebuild) return;
             if(!forceRebuild){
+                if(!canRebuild) return;
                 // This optimization breaks some mods that add content to the table as non Settings, it is automatically bypassed rebuilding() is blocked entirely when non Settings are detected
                 if (lastRebuild == -1) return; // Can't run more than twice per frame
                 if (lastRebuild == 0 || lastRebuild == Core.graphics.getFrameId()) { // First ever run and second run per frame
@@ -939,9 +939,9 @@ public class SettingsMenuDialog extends BaseDialog{
                     return;
                 }
             }else{ // A rebuild was forced, this means that we can no longer rebuild this due to a mod adding a non Setting
-                canRebuild = false;
+                forceRebuild = canRebuild = false;
+                if(!searchBar.isDisabled()) searchBar.addListener(Tooltip.Tooltips.getInstance().create("@client.settings.search.disabled.tooltip")); // Only on first run
                 searchBar.setDisabled(true);
-                searchBar.addListener(Tooltip.Tooltips.getInstance().create("@client.settings.search.disabled.tooltip"));
             }
 
             isRebuilding = true;
@@ -998,6 +998,7 @@ public class SettingsMenuDialog extends BaseDialog{
                     if(setting.name == null || setting.title == null) continue;
                     settings.remove(setting.name);
                 }
+                forceRebuild = !canRebuild; // If we can't rebuild normally, we force a new rebuild through: vanilla would do the same, and it would break bad mods as it will here.
                 rebuild();
             }).margin(14).width(240f).pad(6);
 
