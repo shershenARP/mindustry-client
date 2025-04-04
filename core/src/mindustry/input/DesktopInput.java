@@ -76,6 +76,8 @@ public class DesktopInput extends InputHandler{
     private long lastShiftZ;
     /** Position where the player started drag-selecting. Overlaps with selectX/Y but is only used by client. */
     public float dragX = Float.NaN, dragY;
+    /** Whether the player has provided movement input since some other code set it to false */
+    public boolean moved = false;
 
     @Override
     public void buildUI(Group group){
@@ -1172,6 +1174,7 @@ public class DesktopInput extends InputHandler{
         if(Core.input.keyDown(Binding.mouse_move)){
             movement.add(input.mouseWorld().sub(player).scl(1f / 25f * speed)).limit(speed);
         }
+        if(!moved && !movement.isZero()) moved = true;
 
         if(!Navigation.isFollowing()){
             float mouseAngle = Angles.mouseAngle(unit.x, unit.y);
@@ -1194,7 +1197,7 @@ public class DesktopInput extends InputHandler{
             }
 
             if ((!Core.input.keyDown(Binding.select) || block != null) && shouldShoot) AutoShootKt.autoShoot();
-        } else if (Navigation.currentlyFollowing instanceof MinePath mp && mp.getNewGame() && !movement.isZero()) Navigation.stopFollowing(); // Stop automatic mining on player move
+        }
         unit.controlWeapons(true, player.shooting && !boosted);
 
         player.mouseX = unit.aimX();

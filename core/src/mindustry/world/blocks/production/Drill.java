@@ -104,6 +104,7 @@ public class Drill extends Block{
         Draw.color(returnItem.color);
         Draw.rect(itemRegion, plan.drawx(), plan.drawy());
         Draw.color();
+        Drawf.planEfficiency(this, tile.x, tile.y, returnItem.color, returnCount + "/" + (size * size));
     }
 
     @Override

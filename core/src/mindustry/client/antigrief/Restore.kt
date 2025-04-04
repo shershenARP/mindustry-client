@@ -44,7 +44,7 @@ fun rollbackTiles(tiles: Iterable<Tile>, timeInstant: Instant){
             if (numPlans == 0 && numConfigs == 0) {
                 Core.app.post { player.sendMessage(Core.bundle.get("client.norebuildsfound")) }
             } else {
-                player.sendMessage("[accent]Queued [white]${player.unit().plans.size - numPlans}[] builds and [white]${configs.size - numConfigs}[] configs.")
+                player.sendMessage("[accent]Queued [white]${numPlans}[] builds and [white]${numConfigs}[] configs.")
             }
             plans.clear()
         }
@@ -163,8 +163,9 @@ fun undoPlayer(tiles: Iterable<Tile>, id: Int){
         Core.app.post {
             val numConfigs = configs.size
             val numPlans = player.unit().plans.size
+            player.sendMessage("[accent]Found [white]${plans.size}[] potential plans to undo actions by $playerName[accent].")
             control.input.flushPlans(plans, false, true, false) // Overplace
-            player.sendMessage("[accent] Queued [white]${plans.size - numPlans}[] builds and [white]${configs.size - numConfigs}[] configs to undo actions by $playerName")
+            player.sendMessage("[accent]Queued as [white]${player.unit().plans.size - numPlans}[] builds and [white]${configs.size - numConfigs}[] configs.")
             plans.clear()
         }
     }
