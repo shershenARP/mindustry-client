@@ -1,3 +1,9 @@
+package mindustry.ui.fragments;
+
+import mindustry.gen.Player;
+import arc.struct.ObjectMap;
+import arc.graphics.Color;
+
 public class RoleManager {
     private static final ObjectMap<Player, String> roles = new ObjectMap<>();
 
@@ -8,10 +14,10 @@ public class RoleManager {
     public static String getRole(Player player) {
         return roles.get(player, "No Role");
     }
-    
-    private Color roleColorFor(String role) {
+
+    public static Color roleColorFor(String role) {
         switch(role) {
-            case "Core": return Color.pal;
+            case "Core": return Color.yellow;
             case "Defense": return Color.orange;
             default: return Color.gray;
         }
