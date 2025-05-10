@@ -12,7 +12,7 @@ public class RoleManager {
 
 private Color roleColorFor(String role) {
     switch(role) {
-        case "Core": return Color.sky;
+        case "Core": return Color.pal;
         case "Defense": return Color.orange;
         default: return Color.gray;
     }
