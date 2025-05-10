@@ -8,12 +8,12 @@ public class RoleManager {
     public static String getRole(Player player) {
         return roles.get(player, "No Role");
     }
-}
-
-private Color roleColorFor(String role) {
-    switch(role) {
-        case "Core": return Color.pal;
-        case "Defense": return Color.orange;
-        default: return Color.gray;
+    
+    private Color roleColorFor(String role) {
+        switch(role) {
+            case "Core": return Color.pal;
+            case "Defense": return Color.orange;
+            default: return Color.gray;
+        }
     }
 }
