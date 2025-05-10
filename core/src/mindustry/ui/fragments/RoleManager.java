@@ -9,3 +9,11 @@ public class RoleManager {
         return roles.get(player, "No Role");
     }
 }
+
+private Color roleColorFor(String role) {
+    switch(role) {
+        case "Core": return Color.sky;
+        case "Defense": return Color.orange;
+        default: return Color.gray;
+    }
+}
