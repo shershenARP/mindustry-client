@@ -23,8 +23,12 @@ import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.net.*;
 import mindustry.net.Packets.*;
+import mindustry.type.StatusEffect;
 import mindustry.ui.*;
 import mindustry.ui.dialogs.*;
+import mindustry.ui.fragments.RoleManager;
+
+
 
 import static mindustry.Vars.*;
 
@@ -118,13 +122,26 @@ public class PlayerListFragment{
             table.margin(8);
             table.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
             table.name = user.name();
-            
+
             table.add(new Label(() -> {
                 String role = RoleManager.getRole(user);
                 return "[red][" + "[[#" + RoleManager.roleColorFor(RoleManager.getRole(user)) + "]" + role + "[red]]";
             })).center().padRight(-70).padTop(-20);
             table.add(new Label(() -> {
-                return "[lime]" + user.unit().health;
+                if (user.unit().hasEffect(StatusEffects.invincible)) {
+                    return "[stat]" + user.unit().health;
+                } else if (user.unit().health > user.unit().maxHealth) {
+                    return "[#a9d8ff]" + user.unit().health;
+                } else if (user.unit().health/user.unit().maxHealth > 0.75) {
+                    return "[lime]" + user.unit().health;
+                } else if (user.unit().health/user.unit().maxHealth > 0.50) {
+                    return "[yellow]" + user.unit().health;
+                } else if (user.unit().health/user.unit().maxHealth > 0.19) {
+                    return "[#B40404]" + user.unit().health;
+                } else if (user.unit().health > 0){
+                    return "[gray]" + user.unit().health;
+                };
+                return "null";
             })).center().padRight(-150).padBottom(-30);
 
             button.add(table).size(h);
