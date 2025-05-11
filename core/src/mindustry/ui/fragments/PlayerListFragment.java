@@ -118,11 +118,14 @@ public class PlayerListFragment{
             table.margin(8);
             table.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
             table.name = user.name();
+            
             table.add(new Label(() -> {
-                String role = RoleManager.getRole(player);
-                return "[" + role + "]";
-            })).padLeft(6).color(roleColorFor(RoleManager.getRole(player)));
-
+                String role = RoleManager.getRole(user);
+                return "[red][" + "[[#" + RoleManager.roleColorFor(RoleManager.getRole(user)) + "]" + role + "[red]]";
+            })).center().padRight(-70).padTop(-20);
+            table.add(new Label(() -> {
+                return "[lime]" + user.unit().health;
+            })).center().padRight(-150).padBottom(-30);
 
             button.add(table).size(h);
             button.button( // This is by far the worst line of code I have ever written, its split so its not 500+ chars but still jesus
