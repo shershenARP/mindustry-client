@@ -111,6 +111,7 @@ public interface Platform{
             byte[] result = new byte[8];
             new Rand().nextBytes(result);
             uuid = new String(Base64Coder.encode(result));
+
             Core.settings.put("uuid", uuid);
             return uuid;
         }

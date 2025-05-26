@@ -98,8 +98,8 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     @Nullable private static ChatFragment.ChatMessage commandWarning;
 
     //for RTS controls
-    public Seq<Unit> selectedUnits = new Seq<>();
-    public Seq<Building> commandBuildings = new Seq<>(false);
+    public static Seq<Unit> selectedUnits = new Seq<>();
+    public static Seq<Building> commandBuildings = new Seq<>(false);
     public boolean commandMode = false;
     public boolean commandRect = false;
     public boolean tappedOne = false;
@@ -2200,5 +2200,14 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     static class PlaceLine{
         public int x, y, rotation;
         public boolean last;
+    }
+    public static void selectUnitsType(UnitType seltype) {
+        selectedUnits.clear();
+        commandBuildings.clear();
+        for(var unit : player.team().data().units){
+            if(unit.isCommandable()&&(unit.type == seltype)){
+                selectedUnits.add(unit);
+            }
+        }
     }
 }

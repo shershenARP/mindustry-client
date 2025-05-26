@@ -9,6 +9,7 @@ import arc.struct.*;
 import arc.util.*;
 import arc.util.CommandHandler.*;
 import arc.util.io.*;
+import arc.util.serialization.Base64Coder;
 import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
@@ -136,6 +137,9 @@ public class NetServer implements ApplicationListener{
 
         net.handleServer(ConnectPacket.class, (con, packet) -> {
             if(con.kicked) return;
+            System.out.println(packet.uuid + " packet uuid NetServer");
+            System.out.println(Base64Coder.decode(packet.uuid).length + " packet uuid NetServer length");
+            System.out.println(con.uuid + " con uuid NetServer");
 
             if(con.address.startsWith("steam:")){
                 packet.uuid = con.address.substring("steam:".length());
@@ -146,6 +150,7 @@ public class NetServer implements ApplicationListener{
             con.connectTime = Time.millis();
 
             String uuid = packet.uuid;
+            ui.showInfo(uuid + " uuid NetServer");
 
             if(admins.isIPBanned(con.address) || admins.isSubnetBanned(con.address) || con.kicked || !con.isConnected()) return;
 

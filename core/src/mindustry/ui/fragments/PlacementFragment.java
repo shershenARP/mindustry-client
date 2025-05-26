@@ -36,6 +36,7 @@ public class PlacementFragment{
     final int rowWidth = 8;
 
     public Category currentCategory = Category.distribution;
+    public static Block displayBlock;
 
     Seq<Block> returnArray = new Seq<>(), returnArray2 = new Seq<>();
     Seq<Category> returnCatArray = new Seq<>();
@@ -340,7 +341,7 @@ public class PlacementFragment{
 
                         //find current hovered thing
                         Displayable hovered = hover;
-                        Block displayBlock = menuHoverBlock != null ? menuHoverBlock : control.input.block;
+                        displayBlock = menuHoverBlock != null ? menuHoverBlock : control.input.block;
                         Object displayState = displayBlock != null ? displayBlock : hovered;
                         boolean isHovered = displayBlock == null; //use hovered thing if displayblock is null
 

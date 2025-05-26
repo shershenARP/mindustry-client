@@ -3,6 +3,7 @@ package mindustry.ui.fragments;
 import arc.*;
 import arc.graphics.*;
 import arc.graphics.g2d.*;
+import arc.input.KeyCode;
 import arc.math.*;
 import arc.scene.*;
 import arc.scene.actions.*;
@@ -16,19 +17,29 @@ import arc.struct.*;
 import arc.util.*;
 import mindustry.client.ui.*;
 import mindustry.core.*;
+import mindustry.game.EventType;
 import mindustry.game.EventType.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
 import mindustry.ui.*;
 
+import arc.scene.event.ClickListener;
+import arc.scene.event.HandCursorListener;
+import arc.scene.event.InputEvent;
+import arc.scene.event.InputListener;
+import mindustry.world.Block;
+
 import static mindustry.Vars.*;
 import static mindustry.gen.Tex.*;
+import static mindustry.ui.fragments.PlacementFragment.displayBlock;
 
 public class MenuFragment{
     private Table container, submenu;
     private Button currentMenu;
     public MenuRenderer renderer;
     private Seq<MenuButton> customButtons = new Seq<>();
+    public String chan = Core.settings.getString("chan");
+    public Boolean flagDangerStop = false;
 
     public void build(Group parent){
         renderer = new MenuRenderer();
@@ -64,12 +75,112 @@ public class MenuFragment{
             up = discordBanner;
         }}, ui.discord::show).marginTop(9f).marginLeft(10f).tooltip("@discord").size(84, 45).name("discord"));
 
-        parent.fill(c ->
-            c.bottom().left().image(
-                    Core.atlas.find("flarogus")
-            ).tooltip("Foo's Client now includes Flarogus Client and Zxtej's client. Praise the almighty flarogus.")
-            .size(60, 60).pad(5)
-        );
+        parent.fill(t -> {
+            if (Core.settings.getString("chan") == null) {
+                Core.settings.put("chan", "alpha-chan");
+            }
+            Image dangerIcon = new Image(Core.atlas.find(chan + "-danger"));
+            dangerIcon.visible = false;
+            Image img = new Image(Core.atlas.find(chan));
+            Events.run(Trigger.update, () -> {
+                if (Core.settings.getString("chan") != chan) {
+                    chan = Core.settings.getString("chan");
+                }
+                dangerIcon.setPosition(img.x, img.y);
+            });
+
+
+            img.touchable = Touchable.enabled;
+
+            Tooltip tooltip = new Tooltip(tt -> {
+                tt.background(Styles.black6);
+                tt.add("So cute.").style(Styles.outlineLabel);
+            });
+
+            final float[] offsetX = new float[1];
+            final float[] offsetY = new float[1];
+            final boolean[] dragging = {false};
+            final boolean[] hornyFlag = {false};
+
+
+            Core.scene.add(dangerIcon);
+            Events.on(TeamCoreDamage.class, e -> {
+                dangerIcon.visible = true;
+                dangerIcon.toFront();
+            });
+            Timer.schedule(()->{
+                dangerIcon.visible = false;
+            }, 3,3, -1);
+            img.addListener(new InputListener() {
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, KeyCode button) {
+                    offsetX[0] = x;
+                    offsetY[0] = y;
+                    dragging[0] = true;
+                    if (button == KeyCode.mouseRight) {
+                        final Image[] loves = new Image[4];
+                        hornyFlag[0] = true;
+                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan + "-UwU-horny")));
+
+                        for (var i=0;i<4;i++) {
+                            loves[i] = new Image(Core.atlas.find(chan + "-love"));
+                        }
+                        loves[0].setPosition(img.x - 12,img.y + 60);
+                        loves[1].setPosition(img.x + 35, img.y + 65);
+                        loves[2].setPosition(img.x + 45, img.y + 20);
+                        loves[3].setPosition(img.x - 15, img.y - 5);
+                        for (var i = 0; i<4; i++) {
+                            Core.scene.add(loves[i]);
+                        }
+                        Time.runTask(20f, () ->{
+                            for (var i = 0; i<4; i++) {
+                                loves[i].moveBy(0,2);
+                            }
+                        });
+                        Time.runTask(30f, () ->{
+                            for (var i = 0; i<4; i++) {
+                                loves[i].moveBy(0,2);
+                            }
+                        });
+                        Time.runTask(120f, () ->{
+                            img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan + "-UwU")));
+                            hornyFlag[0] = false;
+                            for (var i = 0; i<4; i++) {
+                                loves[i].remove();
+                            }
+                        });
+                        tooltip.show(img,x,y);
+                        Time.runTask(120f, tooltip::hide);
+                    }
+                    return true;
+                }
+                @Override
+                public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                    // if (!hornyFlag[0]) {
+                        if (dragging[0]) {
+                            img.moveBy(x - offsetX[0], y - offsetY[0]);
+                        }
+                    // }
+                }
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Element from) {
+                    if (!hornyFlag[0]) {
+                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan + "-UwU")));
+                    }
+                }
+
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Element to) {
+                    if (!hornyFlag[0]) {
+                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan)));
+                    }
+                }
+            });
+            img.addListener(new HandCursorListener());
+
+            Core.scene.add(img);
+        });
+
 
         //info icon
         if(mobile){
@@ -80,18 +191,6 @@ public class MenuFragment{
             }}, ui.about::show).size(84, 45).name("info"));
         }else{
             parent.fill(c -> {
-                c.bottom().right().button("Switch to v6", Icon.download, () -> {
-                    ui.loadfrag.show();
-                    becontrol.checkUpdate(result -> {
-                        ui.loadfrag.hide();
-                        if(!result){
-                            ui.showInfo("@be.noupdates");
-                        } else {
-                            becontrol.showUpdateDialog();
-                        }
-                    }, "mindustry-antigrief/mindustry-client-v6-builds");
-                }).size(200, 60).padRight(10);
-
                 c.button("", Icon.refresh, () -> {
                     Core.settings.put("updateurl", (Core.settings.getString("updateurl") + "-v7-builds").replaceFirst("((-v6|-v7)?-builds) {2}", ""));
                     ui.loadfrag.show();

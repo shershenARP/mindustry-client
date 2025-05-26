@@ -66,6 +66,7 @@ public class Units{
         }
 
         if(unit != null){
+            Events.fire(new EventType.PlayerUnitDeathEvent(unit));
             unit.killed();
         }
     }

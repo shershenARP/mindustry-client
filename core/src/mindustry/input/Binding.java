@@ -21,7 +21,8 @@ public enum Binding implements KeyBind{
 
     select_all_units(KeyCode.g),
     select_all_unit_factories(KeyCode.h),
-
+    select_combat_units(KeyCode.j),
+    select_last_units(KeyCode.r),
     pickupCargo(KeyCode.leftBracket),
     dropCargo(KeyCode.rightBracket),
 
@@ -55,6 +56,8 @@ public enum Binding implements KeyBind{
     block_select_08(KeyCode.num8),
     block_select_09(KeyCode.num9),
     block_select_10(KeyCode.num0),
+    block_show_plans(KeyCode.plus),
+    death_show_plans(KeyCode.asterisk),
 
     zoom(new Axis(KeyCode.scroll), "view"),
     menu(Core.app.isAndroid() ? KeyCode.back : KeyCode.escape),

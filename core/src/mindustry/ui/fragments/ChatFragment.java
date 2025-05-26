@@ -386,6 +386,15 @@ public class ChatFragment extends Table{
             message = message.replaceFirst("^" + mode.prefix + " ([/!])", "$1");
         }
 
+        if (!Core.settings.getString("uchatcolor").isEmpty()) {
+            if(mode == ChatMode.normal){
+                String mes1 = message.charAt(0) + "0";
+                if (!mes1.equals("!0") && !mes1.equals("/0")){
+                    message = "[" + Core.settings.getString("uchatcolor") + "]" + message;
+                }
+            }
+        }
+
         StringBuilder messageBuild = new StringBuilder(message);
 
         for (var entry : ClientVars.containsCommandHandler.entries()){ // s l o w

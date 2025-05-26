@@ -14,6 +14,7 @@ import mindustry.world.blocks.power.*;
 public class PowerInfo {
     private @Nullable static PowerGraph found;
     public static PowerGraph selected; // The hovered or selected graph
+    private static int numpower = 0;
 
     public static void update() {
         var max = Groups.powerGraph.array.max(up -> up.graph().all.size > 0 && up.graph().all.first().team == Vars.player.team(), up -> up.graph().all.size);
@@ -27,7 +28,8 @@ public class PowerInfo {
 
     public static void getBars(Table power) { // FINISHME: What in the world
         Bar powerBar = new Bar(
-            () -> Core.bundle.format("bar.powerbalance", found != null ? (found.powerBalance.rawMean() >= 0 ? "+" : "") + UI.formatAmount((long)(found.getPowerBalance() * 60)) : "+0"),
+                () -> Core.bundle.format("bar.powerbalance", found != null ? (found.powerBalance.rawMean() >= 0 ? "+" : "") + UI.formatAmount((int)(found.getPowerBalance() * 60)) + "(" + getNumPowers() + ")" : "+0"),
+                //() -> Core.bundle.format("bar.powerbalance", found != null ? (found.powerBalance.rawMean() >= 0 ? "+" : "") + UI.formatAmount((long)(found.getPowerBalance() * 60)) : "+0"),
             () -> Pal.powerBar,
             () -> found != null ? found.getSatisfaction() : 0
         );
@@ -41,5 +43,14 @@ public class PowerInfo {
         power.row();
         power.add(batteryBar).height(18).growX().padBottom(6);
 
+    }
+    public static int getNumPowers(){
+        numpower = 0;
+        Groups.powerGraph.forEach( p ->{
+            if(p.graph().all.first().team == Vars.player.team()) {
+                if (p.graph().powerBalance.rawMean() != 0) numpower = numpower + 1;
+            }
+        });
+        return numpower;
     }
 }

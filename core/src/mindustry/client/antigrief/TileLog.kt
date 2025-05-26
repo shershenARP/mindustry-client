@@ -1,6 +1,7 @@
 package mindustry.client.antigrief
 
 import arc.*
+import arc.math.Mathf
 import arc.math.geom.*
 import arc.scene.*
 import arc.scene.ui.layout.*
@@ -196,7 +197,7 @@ class ConfigureTileLog(tile: Tile, cause: Interactor, val block: Block, val rota
         }
     }
 
-    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.configured")}"
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.configured")} ${block.emoji()}"
 }
 
 open class TilePlacedLog(tile: Tile, cause: Interactor, val block: Block, var rotation: Int = tile.build?.rotation?:0, var configuration: Any?, val isRootTile: Boolean) : TileLog(tile, cause) {
@@ -216,7 +217,7 @@ open class TilePlacedLog(tile: Tile, cause: Interactor, val block: Block, var ro
         return "${cause.name.stripColors()} ${Core.bundle.get("client.built")} ${block.localizedName}"
     }
 
-    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.built")} ${block.localizedName}"
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.built")} ${block.emoji()}"
 }
 
 class BlockPayloadDropLog(tile: Tile, cause: Interactor, block: Block, rotation: Int, configuration: Any?, origin: Boolean) : TilePlacedLog(tile, cause, block, rotation, configuration, origin) {
@@ -224,7 +225,7 @@ class BlockPayloadDropLog(tile: Tile, cause: Interactor, block: Block, rotation:
         return "${cause.name.stripColors()} ${Core.bundle.get("client.putdown")} ${block.localizedName}"
     }
 
-    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.putdown")} ${block.localizedName}"
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.putdown")} ${block.emoji()}"
 }
 
 open class TileBreakLog(tile: Tile, cause: Interactor, val block: Block) : TileLog(tile, cause) {
@@ -239,7 +240,7 @@ open class TileBreakLog(tile: Tile, cause: Interactor, val block: Block) : TileL
         return "${cause.name.stripColors()} ${Core.bundle.get("client.broke")} ${block.localizedName}"
     }
 
-    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.broke")} ${block.localizedName}"
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.broke")} ${block.emoji()}"
 }
 
 class BlockPayloadPickupLog(tile: Tile, cause: Interactor, block: Block) : TileBreakLog(tile, cause, block) {
@@ -247,7 +248,7 @@ class BlockPayloadPickupLog(tile: Tile, cause: Interactor, block: Block) : TileB
         return "${cause.name.stripColors()} ${Core.bundle.get("client.pickedup")} ${block.localizedName}"
     }
 
-    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.pickedup")} ${block.localizedName}"
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.pickedup")} ${block.emoji()}"
 }
 
 class TileDestroyedLog(tile: Tile, block: Block) : TileBreakLog(tile, NoInteractor(), block) {
@@ -255,7 +256,7 @@ class TileDestroyedLog(tile: Tile, block: Block) : TileBreakLog(tile, NoInteract
         return "${block.localizedName} ${Core.bundle.get("client.destroyed")}"
     }
 
-    override fun toShortString() = "${block.localizedName} ${Core.bundle.get("client.destroyed")}"
+    override fun toShortString() = "${block.emoji()} ${Core.bundle.get("client.destroyed")}"
 }
 
 class UnitDestroyedLog(val tile: Tile, cause: Interactor, val unit: Unit, val isPlayer : Boolean) : TileLog(tile, cause) {
@@ -284,5 +285,15 @@ class RotateTileLog(tile: Tile, cause: Interactor, val block: Block, val rotatio
         return "${cause.name.stripColors()} ${Core.bundle.get("client.rotated")} ${block.localizedName} ${Core.bundle.get(if (direction) "client.counterclockwise" else "client.clockwise")}"
     }
 
-    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.rotated")} ${block.localizedName}"
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.rotated")} ${block.emoji()}"
+}
+class CommandTileLog(tile: Tile, cause: Interactor, val block: Block, val poscom: Vec2) : TileLog(tile, cause) {
+    override fun apply(previous: TileState) {
+        previous.rotation = 0
+    }
+    override fun toString(): String {
+        return "${cause.name.stripColors()} ${Core.bundle.get("client.command")} ${block.localizedName} ${ " to "} ${Mathf.ceil(poscom.x/8)}  ${ ","}  ${Mathf.ceil(poscom.y/8)}"
+    }
+
+    override fun toShortString() = "${cause.shortName.stripColors().subSequence(0, min(16, cause.shortName.stripColors().length))}${if (cause.shortName.stripColors().length > 16) "..." else ""} ${Core.bundle.get("client.command")} ${block.emoji()}"
 }
