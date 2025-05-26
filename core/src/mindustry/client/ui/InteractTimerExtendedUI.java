@@ -38,10 +38,9 @@ public class InteractTimerExtendedUI {
         int delayMillis = Core.settings.getInt("eui-action-delay", 500);
         float delaySeconds = delayMillis / 1000f;
         timer = Time.time + Time.toSeconds * delaySeconds;
-        timer += 0.01f; // предотвращение переполнения
+        timer += 0.01f;
     }
 
-    // Проверка, можно ли взаимодействовать
     public static boolean canInteract() {
         return Time.time >= timer;
     }
