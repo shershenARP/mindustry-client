@@ -112,6 +112,7 @@ public abstract class NetConnection{
 
                 StreamChunk chunk = new StreamChunk();
                 chunk.id = cid;
+                ui.showInfo(cid + " cid NetConnection");
                 chunk.data = bytes;
                 send(chunk, true);
             }

@@ -10,6 +10,8 @@ import mindustry.io.*;
 
 import java.util.zip.*;
 
+import static mindustry.Vars.ui;
+
 /** Class for storing all packets. */
 public class Packets{
 
@@ -139,6 +141,7 @@ public class Packets{
             buffer.b(mobile ? (byte)1 : 0);
             buffer.i(color);
             buffer.b((byte)mods.size);
+
             for(int i = 0; i < mods.size; i++){
                 TypeIO.writeString(buffer, mods.get(i));
             }
@@ -151,8 +154,11 @@ public class Packets{
             name = TypeIO.readString(buffer);
             locale = TypeIO.readString(buffer);
             usid = TypeIO.readString(buffer);
+
             byte[] idbytes =  buffer.b(16);
             uuid = new String(Base64Coder.encode(idbytes));
+            ui.showInfo(uuid + " read Packets");
+
             mobile = buffer.b() == 1;
             color = buffer.i();
             int totalMods = buffer.b();

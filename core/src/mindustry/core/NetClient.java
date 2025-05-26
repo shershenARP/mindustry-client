@@ -48,6 +48,8 @@ public class NetClient implements ApplicationListener{
     private static final Pattern wholeCoordPattern = Pattern.compile("\\S*?(\\d+)(?:\\[[^]]*])*(?:\\s|,)+(?:\\[[^]]*])*(\\d+)\\S*"); // This regex is a mess, it captures the coords into $1 and $2 while $0 contains all surrounding text as well. https://regex101.com is the superior regex tester
     private static final Pattern coordPattern = Pattern.compile("(\\d+)(?:\\[[^]]*])*(?:\\s|,)+(?:\\[[^]]*])*(\\d+)"); // Same as above, but without the surrounding text and https://regexr.com
     private static final Pattern linkPattern = Pattern.compile("(https?://)?[-a-zA-Z0-9@:%._\\\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b[-a-zA-Z0-9()@:%_\\\\+.~#?&/=]*");
+    public static String ip;
+    public static Integer port;
 
     private long ping;
     private Interval timer = new Interval(5);
@@ -76,6 +78,13 @@ public class NetClient implements ApplicationListener{
 
         net.handleClient(Connect.class, packet -> {
             Log.info("Connecting to server: @", packet.addressTCP);
+
+            String trimmed = packet.addressTCP.substring(1);
+            String[] parts = trimmed.split(":");
+            if (parts.length == 2) {
+                ip = parts[0];
+                port = Integer.parseInt(parts[1]);
+            }
 
             player.admin = false;
 
@@ -110,6 +119,7 @@ public class NetClient implements ApplicationListener{
             c.color = player.color.rgba();
             c.usid = getUsid(packet.addressTCP);
             c.uuid = platform.getUUID();
+
 
             var address = packet.addressTCP.split("[:/]")[1]; // Remove leading slash (and domain) and trailing port
             if (ui.join.communityHosts.contains(h -> "Korea".equals(h.group) && h.address.equals(address))) { // Korea is cursed

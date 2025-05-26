@@ -23,7 +23,7 @@ import mindustry.graphics.g3d.*;
 import static arc.Core.*;
 
 public class LoadRenderer implements Disposable{
-    private static final Color color = new Color(Pal.accent).lerp(Color.black, 0.5f);
+    private static final Color color = new Color(Color.valueOf("505050")).lerp(Color.black, 0.5f);
     private static final Color colorRed = Pal.breakInvalid.cpy().lerp(Color.black, 0.3f);
     private static final String red = "[#" + colorRed + "]";
     private static final String orange = "[#" + color + "]";

@@ -184,6 +184,7 @@ public class ApplicationTests{
         con.name = "INVALID";
         buffer.position(0);
         con.read(new Reads(new ByteBufferInput(buffer)));
+        ui.showInfo(con.uuid + " con.uuid ApplicationTests");
 
         assertEquals(string, con.name);
     }

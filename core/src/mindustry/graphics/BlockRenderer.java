@@ -10,9 +10,12 @@ import arc.math.geom.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import arc.util.pooling.Pools;
 import mindustry.*;
 import mindustry.client.*;
+import mindustry.client.ui.TrashDialog;
 import mindustry.content.*;
+import mindustry.core.ActionsHistory;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
 import mindustry.game.Teams.*;
@@ -21,6 +24,8 @@ import mindustry.ui.*;
 import mindustry.world.*;
 import mindustry.world.blocks.environment.Floor.*;
 import mindustry.world.blocks.power.*;
+
+import java.time.LocalTime;
 
 import static arc.Core.*;
 import static mindustry.Vars.*;
@@ -293,6 +298,221 @@ public class BlockRenderer{
             Draw.reset();
         }
     }
+    public void drawPBlocks(){
+        if(!playersblockplanshow) return;
+        brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
+        for(ActionsHistory.BlockPlayerPlan block : ActionsHistory.blocksplayersplans) {
+            //for(BlockPlayerPlan block : state.teams.get(player.team()).blocksplayersplans) {
+            Block b = content.block(block.block);
+            if (!camera.bounds(Tmp.r1).grow(tilesize * 2f).overlaps(Tmp.r2.setSize(b.size * tilesize).setCenter(block.x * tilesize + b.offset, block.y * tilesize + b.offset)))
+                continue;
+            Draw.alpha(0.70f * brokenFade * Core.settings.getInt("fadedblockallplayers")/10f); // Default is 0.33f
+            if(block.wasbreaking){Draw.mixcol(Color.red, 0.2f + Mathf.absin(Time.globalTime, 6f, 0.2f));}
+            else {Draw.mixcol(Color.green, 0.2f + Mathf.absin(Time.globalTime, 6f, 0.2f));}
+            Draw.rect(b.fullIcon, block.x * tilesize + b.offset, block.y * tilesize + b.offset, b.rotate ? block.rotation * 90 : 0f);
+        }
+        Draw.reset();
+    }
+    public void drawDeathPlayers(){
+        if(!playersdeathplanshow) return;
+        brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
+
+        //for(UnitsKilledByPlayers kunit : state.teams.get(player.team()).deathunitsplan) {
+        for(ActionsHistory.UnitsKilledByPlayers kunit : ActionsHistory.deathunitsplan) {
+
+            Font font = Fonts.outline;
+            GlyphLayout layout = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
+            font.setUseIntegerPositions(false);
+            font.getData().setScale(0.25F / Scl.scl(1.0F));
+            if (kunit == null) continue;
+            if (kunit.kplayer == null) continue;
+            String text = kunit.kplayer.name;
+
+            LocalTime nowtimeoffset = LocalTime.now().minusSeconds((long) TrashDialog.timeoffsetseccontr);
+            if(TrashDialog.timeoffsetseccontr != 0) {
+                if(kunit.localTime.isBefore(nowtimeoffset)){ continue; }
+            }
+
+            String texttime = kunit.localTime.getHour() + ":";
+            String texttimemin = kunit.localTime.getMinute() + ":";
+            if(texttimemin.length() == 2) { texttimemin = "0" + texttimemin;}
+            String texttimesec = kunit.localTime.getSecond() + "";
+            if(texttimesec.length() == 1) { texttimesec = "0" + texttimesec;}
+            texttime = texttime + texttimemin + texttimesec;
+
+            String offsettext = Strings.stripColors(text);
+
+            layout.setText(font, text);
+            font.setColor(Color.white);
+
+            font.draw(text, kunit.x - offsettext.length() * 1.5f, kunit.y + kunit.kunit.type.uiIcon.height * 0.2f * 1.5f);
+            font.draw(texttime, kunit.x - texttime.length() * 1.5f, kunit.y + kunit.kunit.type.uiIcon.height * 0.2f);
+            font.getData().setScale(1);
+            Pools.free(layout);
+            Draw.alpha(0.90f * brokenFade); // Default is 0.33f
+            Draw.mixcol(Color.red, 0.2f + Mathf.absin(Time.globalTime, 6f, 0.2f));
+            Draw.rect(kunit.kunit.icon(), kunit.x, kunit.y);
+        }
+        Draw.reset();
+    }
+
+    public void drawDeathControlPlayers(){
+        if(!playersdeathcontrolplanshow) return;
+        brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
+
+        //for(UnitsKilledByControllPlayers kunit : state.teams.get(player.team()).deathunitscontrolplan) {
+        for(ActionsHistory.UnitsKilledByControllPlayers kunit : ActionsHistory.deathunitscontrolplan) {
+
+            Font font = Fonts.outline;
+            GlyphLayout layout = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
+            font.setUseIntegerPositions(false);
+            font.getData().setScale(0.25F / Scl.scl(1.0F));
+            if (kunit == null) continue;
+            if (kunit.kplayer == null) continue;
+            String text = kunit.kplayer;
+
+            LocalTime nowtimeoffset = LocalTime.now().minusSeconds((long)TrashDialog.timeoffsetseccommand);
+            if(TrashDialog.timeoffsetseccommand != 0) {
+                if(kunit.localTime.isBefore(nowtimeoffset)){ continue; }
+            }
+
+            String texttime = kunit.localTime.getHour() + ":";
+            String texttimemin = kunit.localTime.getMinute() + ":";
+            if(texttimemin.length() == 2) { texttimemin = "0" + texttimemin;}
+            String texttimesec = kunit.localTime.getSecond() + "";
+            if(texttimesec.length() == 1) { texttimesec = "0" + texttimesec;}
+            texttime = texttime + texttimemin + texttimesec;
+
+            String offsettext = Strings.stripColors(text);
+
+            layout.setText(font, text);
+            font.setColor(Color.white);
+
+            font.draw(text, kunit.x - offsettext.length() * 1.5f, kunit.y + kunit.kunit.type.uiIcon.height * 0.2f * 1.5f);
+            font.draw(texttime, kunit.x - texttime.length() * 1.5f, kunit.y + kunit.kunit.type.uiIcon.height * 0.2f);
+            font.getData().setScale(1);
+            Pools.free(layout);
+            Draw.alpha(0.90f * brokenFade); // Default is 0.33f
+            Draw.mixcol(Color.red, 0.2f + Mathf.absin(Time.globalTime, 6f, 0.2f));
+            Draw.rect(kunit.kunit.icon(), kunit.x, kunit.y);
+        }
+        Draw.reset();
+    }
+    public void drawDeathPlayerName(String name){
+        brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
+
+        for(ActionsHistory.UnitsKilledByPlayers kunit : ActionsHistory.deathunitsplan) {
+            //for(UnitsKilledByPlayers kunit : state.teams.get(player.team()).deathunitsplan) {
+            if (kunit == null) continue;
+            if (kunit.kplayer == null) continue;
+            if(kunit.kplayer.name.contains(name)){
+
+                Font font = Fonts.outline;
+                GlyphLayout layout = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
+                font.setUseIntegerPositions(false);
+                font.getData().setScale(0.25F / Scl.scl(1.0F));
+
+                LocalTime nowtimeoffset = LocalTime.now().minusSeconds((long)TrashDialog.timeoffsetseccontr);
+                if(TrashDialog.timeoffsetseccontr != 0) {
+                    if(kunit.localTime.isBefore(nowtimeoffset)){ continue; }
+                }
+
+                String text = kunit.kplayer.name;
+                String texttime = kunit.localTime.getHour() + ":";
+                String texttimemin = kunit.localTime.getMinute() + ":";
+                if(texttimemin.length() == 2) { texttimemin = "0" + texttimemin;}
+                String texttimesec = kunit.localTime.getSecond() + "";
+                if(texttimesec.length() == 1) { texttimesec = "0" + texttimesec;}
+                texttime = texttime + texttimemin + texttimesec;
+
+                String offsettext = Strings.stripColors(text);
+
+                layout.setText(font, text);
+                font.setColor(Color.white);
+
+                font.draw(text, kunit.x - offsettext.length() * 1.5f, kunit.y + kunit.kunit.type.fullIcon.height * 0.2f * 1.5f);
+                font.draw(texttime, kunit.x - texttime.length() * 1.5f, kunit.y + kunit.kunit.type.fullIcon.height * 0.2f);
+                font.getData().setScale(1);
+                Pools.free(layout);
+                Draw.alpha(0.90f * brokenFade); // Default is 0.33f
+                Draw.mixcol(Color.red, 0.2f + Mathf.absin(Time.globalTime, 6f, 0.2f));
+                Draw.rect(kunit.kunit.icon(), kunit.x, kunit.y);
+            }
+        }
+        Draw.reset();
+    }
+    public void drawDeathControlPlayersName(String name){
+        brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
+
+        for(ActionsHistory.UnitsKilledByControllPlayers kunit : ActionsHistory.deathunitscontrolplan) {
+            //for(UnitsKilledByControllPlayers kunit : state.teams.get(player.team()).deathunitscontrolplan) {
+            if (kunit == null) continue;
+            if (kunit.kplayer == null) continue;
+            if(kunit.kplayer.contains(name)){
+
+                Font font = Fonts.outline;
+                GlyphLayout layout = Pools.obtain(GlyphLayout.class, GlyphLayout::new);
+                font.setUseIntegerPositions(false);
+                font.getData().setScale(0.25F / Scl.scl(1.0F));
+
+                LocalTime nowtimeoffset = LocalTime.now().minusSeconds((long)TrashDialog.timeoffsetseccommand);
+                if(TrashDialog.timeoffsetseccommand != 0) {
+                    if(kunit.localTime.isBefore(nowtimeoffset)){ continue; }
+                }
+
+                String text = kunit.kplayer;
+                String texttime = kunit.localTime.getHour() + ":";
+                String texttimemin = kunit.localTime.getMinute() + ":";
+                if(texttimemin.length() == 2) { texttimemin = "0" + texttimemin;}
+                String texttimesec = kunit.localTime.getSecond() + "";
+                if(texttimesec.length() == 1) { texttimesec = "0" + texttimesec;}
+                texttime = texttime + texttimemin + texttimesec;
+
+                String offsettext = Strings.stripColors(text);
+
+                layout.setText(font, text);
+                font.setColor(Color.white);
+
+                font.draw(text, kunit.x - offsettext.length() * 1.5f, kunit.y + kunit.kunit.type.fullIcon.height * 0.2f * 1.5f);
+                font.draw(texttime, kunit.x - texttime.length() * 1.5f, kunit.y + kunit.kunit.type.fullIcon.height * 0.2f);
+                font.getData().setScale(1);
+                Pools.free(layout);
+                Draw.alpha(0.90f * brokenFade); // Default is 0.33f
+                Draw.mixcol(Color.red, 0.2f + Mathf.absin(Time.globalTime, 6f, 0.2f));
+                Draw.rect(kunit.kunit.icon(), kunit.x, kunit.y);
+            }
+        }
+        Draw.reset();
+    }
+    public void drawPlayersBlocks(String names){
+        brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
+        //for(BlockPlayerPlan block : state.teams.get(player.team()).blocksplayersplans) {
+        for(ActionsHistory.BlockPlayerPlan block : ActionsHistory.blocksplayersplans) {
+            if(block.lastacs == null) continue;
+            if(block.lastacs.contains(names)) {
+                Block b = content.block(block.block);
+                if (!camera.bounds(Tmp.r1).grow(tilesize * 2f).overlaps(Tmp.r2.setSize(b.size * tilesize).setCenter(block.x * tilesize + b.offset, block.y * tilesize + b.offset)))
+                    continue;
+                Draw.alpha( Core.settings.getInt("fadedblockplayer") / 10f  * brokenFade); // Default is 0.33f
+                if(block.wasbreaking){ Draw.mixcol(Color.red, 0.7f + Mathf.absin(Time.globalTime, 6f, 0.2f));}
+                else {
+                    Draw.mixcol(Color.green, 0.7f + Mathf.absin(Time.globalTime, 6f, 0.2f));}
+                Draw.rect(b.fullIcon, block.x * tilesize + b.offset, block.y * tilesize + b.offset, b.rotate ? block.rotation * 90 : 0f);
+            }
+        }
+
+        for(ActionsHistory.BlockConfigPlayerPlan blockcon : ActionsHistory.blockconfplayersplans) {
+            if(blockcon.lastacs == null) continue;
+            if(blockcon.lastacs.contains(names)) {
+                Block b = content.block(blockcon.block);
+                if (!camera.bounds(Tmp.r1).grow(tilesize * 2f).overlaps(Tmp.r2.setSize(b.size * tilesize).setCenter(blockcon.x * tilesize + b.offset, blockcon.y * tilesize + b.offset)))  continue;
+                Draw.alpha(Core.settings.getInt("fadedblockplayer")/10f * brokenFade); // Default is 0.33f
+                Draw.mixcol(Color.blue, 0.5f + Mathf.absin(Time.globalTime, 6f, 0.2f));
+                Draw.rect(b.fullIcon, blockcon.x * tilesize + b.offset, blockcon.y * tilesize + b.offset,0f);
+            }
+        }
+        Draw.reset();
+    }
 
     public void drawShadows(){
         if(ClientVars.hidingBlocks) return;
@@ -415,6 +635,14 @@ public class BlockRenderer{
         Team pteam = player.team();
 
         drawDestroyed();
+        drawPBlocks();
+        drawDeathPlayers();
+        drawDeathControlPlayers();
+        if(nameforplans != null) {
+            drawPlayersBlocks(nameforplans);
+            drawDeathPlayerName(nameforplans);
+            drawDeathControlPlayersName(nameforplans);
+        }
 
         //draw most tile stuff
         for(int i = 0; i < tileview.size; i++){

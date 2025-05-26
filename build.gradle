@@ -17,6 +17,7 @@ buildscript{
             return "com.github.mindustry-antigrief${localArc ? "" : ".Arc"}:$name:$arcHash"
             // TODO: Merge recheck: Merge bala's arc
         }
+
     }
 
     repositories{

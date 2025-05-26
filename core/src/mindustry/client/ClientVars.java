@@ -11,6 +11,7 @@ import kotlin.*;
 import mindustry.entities.units.*;
 import mindustry.gen.*;
 import mindustry.net.*;
+import mindustry.type.UnitType;
 import mindustry.ui.*;
 import mindustry.world.blocks.defense.*;
 import mindustry.world.blocks.distribution.*;
@@ -42,6 +43,11 @@ public class ClientVars {
     public static float ratelimitSeconds = Core.settings.getFloat("ratelimitseconds", Administration.Config.interactRateWindow.num() + 1); // The number of seconds between ratelimit resets
     public static int ratelimitRemaining = ratelimitMax; // Number of configs that can be made safely before ratelimit reset
 
+    //FD Vars
+    public static UnitType last_select_units_type = null;
+    public static String nameforplans;
+    public static Player assistuser;
+
     // Hotkeys
     public static boolean
         showingTurrets, showingAllyTurrets, showingInvTurrets,
@@ -49,7 +55,7 @@ public class ClientVars {
         hidingBlocks, hidingPlans,
         dispatchingBuildPlans,
         showingOverdrives,
-        showingMassDrivers;
+        showingMassDrivers, playersblockplanshow, playersdeathplanshow, playersdeathcontrolplanshow;
     @NotNull public static Seq<OverdriveProjector.OverdriveBuild> overdrives = new Seq<>(); // For whatever reason the stupid allBuildings method hates me so im just not using it FINISHME: Replace this by just expanding block clipsize and drawing a circle in the draw method rather than using this
     @NotNull public static Seq<MassDriver.MassDriverBuild> massDrivers = new Seq<>(); // FINISHME: this too.
     @NotNull public static Seq<PayloadMassDriver.PayloadDriverBuild> payloadMassDrivers = new Seq<>(); // i literally just copypasted the code

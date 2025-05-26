@@ -6,6 +6,7 @@ import arc.util.*;
 import mindustry.ai.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.client.*;
+import mindustry.content.Blocks;
 import mindustry.core.GameState.*;
 import mindustry.ctype.*;
 import mindustry.game.EventType.*;
@@ -15,9 +16,11 @@ import mindustry.gen.*;
 import mindustry.maps.*;
 import mindustry.type.*;
 import mindustry.type.Weather.*;
+import mindustry.ui.fragments.ChatFragment;
 import mindustry.world.*;
 import mindustry.world.blocks.storage.CoreBlock.*;
 
+import java.time.LocalTime;
 import java.util.*;
 
 import static mindustry.Vars.*;
@@ -32,34 +35,34 @@ import static mindustry.Vars.*;
  */
 public class Logic implements ApplicationListener{
 
-    public Logic(){
+    public Logic() {
         Events.on(BlockDestroyEvent.class, event -> {
             //skip if rule is off
-            if(!state.rules.ghostBlocks) return;
+            if (!state.rules.ghostBlocks) return;
 
             //blocks that get broken are appended to the team's broken block queue
             Tile tile = event.tile;
             //skip null entities or un-rebuildables, for obvious reasons
-            if(tile.build == null || !tile.block().rebuildable) return;
+            if (tile.build == null || !tile.block().rebuildable) return;
 
             tile.build.addPlan(true);
         });
 
         Events.on(BlockBuildEndEvent.class, event -> {
-            if(!event.breaking){
+            if (!event.breaking) {
                 TeamData data = event.team.data();
                 Iterator<BlockPlan> it = data.plans.iterator();
                 var bounds = event.tile.block().bounds(event.tile.x, event.tile.y, Tmp.r1);
-                while(it.hasNext()){
+                while (it.hasNext()) {
                     BlockPlan b = it.next();
                     Block block = content.block(b.block);
-                    if(bounds.overlaps(block.bounds(b.x, b.y, Tmp.r2))){
+                    if (bounds.overlaps(block.bounds(b.x, b.y, Tmp.r2))) {
                         b.removed = true;
                         it.remove();
                     }
                 }
 
-                if(event.team == state.rules.defaultTeam){
+                if (event.team == state.rules.defaultTeam) {
                     state.stats.placedBlockCount.increment(event.tile.block());
                 }
             }
@@ -67,33 +70,33 @@ public class Logic implements ApplicationListener{
 
         //when loading a 'damaged' sector, propagate the damage
         Events.on(SaveLoadEvent.class, e -> {
-            if(state.isCampaign()){
+            if (state.isCampaign()) {
                 state.rules.coreIncinerates = true;
 
                 //TODO why is this even a thing?
                 state.rules.canGameOver = true;
 
                 //fresh map has no sector info
-                if(!e.isMap){
+                if (!e.isMap) {
                     SectorInfo info = state.rules.sector.info;
                     info.write();
 
                     //only simulate waves if the planet allows it
-                    if(state.rules.sector.planet.allowWaveSimulation){
+                    if (state.rules.sector.planet.allowWaveSimulation) {
                         //how much wave time has passed
                         int wavesPassed = info.wavesPassed;
 
                         //wave has passed, remove all enemies, they are assumed to be dead
-                        if(wavesPassed > 0){
+                        if (wavesPassed > 0) {
                             Groups.unit.each(u -> {
-                                if(u.team == state.rules.waveTeam){
+                                if (u.team == state.rules.waveTeam) {
                                     u.remove();
                                 }
                             });
                         }
 
                         //simulate passing of waves
-                        if(wavesPassed > 0){
+                        if (wavesPassed > 0) {
                             //simulate wave counter moving forward
                             state.wave += wavesPassed;
                             state.wavetime = state.rules.waveSpacing;
@@ -119,7 +122,7 @@ public class Logic implements ApplicationListener{
             //reset weather on play
             var randomWeather = state.rules.weather.copy().shuffle();
             float sum = 0f;
-            for(var weather : randomWeather){
+            for (var weather : randomWeather) {
                 weather.cooldown = sum + Mathf.random(weather.maxFrequency);
                 sum += weather.cooldown;
             }
@@ -131,7 +134,7 @@ public class Logic implements ApplicationListener{
             //enable infinite ammo for wave team by default
             state.rules.waveTeam.rules().infiniteAmmo = true;
 
-            if(state.isCampaign()){
+            if (state.isCampaign()) {
                 //enable building AI on campaign unless the preset disables it
 
                 state.rules.coreIncinerates = true;
@@ -139,8 +142,8 @@ public class Logic implements ApplicationListener{
                 state.rules.waveTeam.rules().buildSpeedMultiplier *= state.getPlanet().enemyBuildSpeedMultiplier;
 
                 //fill enemy cores by default? TODO decide
-                for(var core : state.rules.waveTeam.cores()){
-                    for(Item item : content.items()){
+                for (var core : state.rules.waveTeam.cores()) {
+                    for (Item item : content.items()) {
                         core.items.set(item, core.block.itemCapacity);
                     }
                 }
@@ -156,19 +159,19 @@ public class Logic implements ApplicationListener{
 
         //sync research
         Events.on(UnlockEvent.class, e -> {
-            if(net.server()){
+            if (net.server()) {
                 Call.researched(e.content);
             }
         });
 
         Events.on(SectorCaptureEvent.class, e -> {
-            if(!net.client() && e.sector == state.getSector() && e.sector.isBeingPlayed()){
+            if (!net.client() && e.sector == state.getSector() && e.sector.isBeingPlayed()) {
                 state.rules.waveTeam.data().destroyToDerelict();
             }
         });
 
         Events.on(BlockDestroyEvent.class, e -> {
-            if(e.tile.build instanceof CoreBuild core && core.team.isAI() && state.rules.coreDestroyClear){
+            if (e.tile.build instanceof CoreBuild core && core.team.isAI() && state.rules.coreDestroyClear) {
                 Core.app.post(() -> {
                     core.team.data().timeDestroy(core.x, core.y, state.rules.enemyCoreBuildRadius);
                 });
@@ -177,36 +180,111 @@ public class Logic implements ApplicationListener{
 
         //listen to core changes; if all cores have been destroyed, set to derelict.
         Events.on(CoreChangeEvent.class, e -> Core.app.post(() -> {
-            if(state.rules.cleanupDeadTeams && state.rules.pvp && !e.core.isAdded() && e.core.team != Team.derelict && e.core.team.cores().isEmpty()){
+            if (state.rules.cleanupDeadTeams && state.rules.pvp && !e.core.isAdded() && e.core.team != Team.derelict && e.core.team.cores().isEmpty()) {
                 e.core.team.data().destroyToDerelict();
             }
         }));
 
         Events.on(BlockBuildEndEvent.class, e -> {
-            if(e.team == state.rules.defaultTeam){
-                if(e.breaking){
+            if (e.team == state.rules.defaultTeam) {
+                if (e.breaking) {
                     state.stats.buildingsDeconstructed++;
-                }else{
+                } else {
                     state.stats.buildingsBuilt++;
                 }
             }
         });
 
         Events.on(BlockDestroyEvent.class, e -> {
-            if(e.tile.team() == state.rules.defaultTeam){
-                state.stats.buildingsDestroyed ++;
+            if (e.tile.team() == state.rules.defaultTeam) {
+                state.stats.buildingsDestroyed++;
             }
         });
 
         Events.on(UnitDestroyEvent.class, e -> {
-            if(e.unit.team() != state.rules.defaultTeam){
-                state.stats.enemyUnitsDestroyed ++;
+            if (e.unit.team() != state.rules.defaultTeam) {
+                state.stats.enemyUnitsDestroyed++;
             }
         });
 
         Events.on(UnitCreateEvent.class, e -> {
-            if(e.unit.team == state.rules.defaultTeam){
+            if (e.unit.team == state.rules.defaultTeam) {
                 state.stats.unitsCreated++;
+            }
+        });
+
+        Events.on(BlockBuildBeginEventBefore.class, it -> { // Recording the construction of blocks
+            if (Core.settings.getBool("blocksplayersplan")) {
+                if (it.newBlock == null || it.newBlock == Blocks.air) {
+                    if (it.tile.build == null || !it.tile.block().rebuildable) return;
+                    ActionsHistory.blocksplayersplans.addFirst(new ActionsHistory.BlockPlayerPlan(it.tile.x, it.tile.y, (short) it.tile.build.rotation, it.tile.build.block.id, it.tile.build.config(), it.unit.getControllerName(), it.breaking));
+                    //state.teams.get(player.team()).blocksplayersplans.addFirst(new BlockPlayerPlan(it.tile.x, it.tile.y, (short) it.tile.build.rotation, it.tile.build.block.id,it.tile.build.config(), it.unit.getControllerName(), it.breaking));
+                } else {
+                    if (it.tile == null) return;
+                    //state.teams.get(player.team()).blocksplayersplans.addFirst(new BlockPlayerPlan(it.tile.x, it.tile.y, (short) 0,  it.newBlock.id, null, it.unit.getControllerName(), it.breaking));
+                    ActionsHistory.blocksplayersplans.addFirst(new ActionsHistory.BlockPlayerPlan(it.tile.x, it.tile.y, (short) 0, it.newBlock.id, null, it.unit.getControllerName(), it.breaking));
+                }
+            }
+        });
+
+        Events.on(BuildRotateEvent.class, it -> { // Recording the confgigs of blocks
+            if (Core.settings.getBool("blocksplayersplan")) {
+                if (it.build == null || it.unit.controller() == null) return;
+                ActionsHistory.blockconfplayersplans.addFirst(new ActionsHistory.BlockConfigPlayerPlan((int) it.build.x / 8, (int) it.build.y / 8, it.build.block.id, it.unit.getControllerName()));
+                //state.teams.get(player.team()).blockconfplayersplans.addFirst(new BlockConfigPlayerPlan((int)it.build.x/8, (int)it.build.y/8, it.build.block.id, it.player.name));
+            }
+        });
+        Events.on(ConfigEvent.class, it -> { // Recording the confgigs of blocks
+            if (Core.settings.getBool("blocksplayersplan")) {
+                if (it.tile.block == null || it.player == null) return;
+                //state.teams.get(player.team()).blockconfplayersplans.addFirst(new BlockConfigPlayerPlan((int)it.tile.x/8, (int)it.tile.y/8, it.tile.block.id, it.player.name));
+                ActionsHistory.blockconfplayersplans.addFirst(new ActionsHistory.BlockConfigPlayerPlan((int) it.tile.x / 8, (int) it.tile.y / 8, it.tile.block.id, it.player.name));
+            }
+        });
+
+        Events.on(UnitDeadEvent.class, it -> { // Alarm of death units
+            if (Core.settings.getBool("unitdeathalarm")) {
+                if (Core.settings.getInt("unitdeathalarmhp") == 0) return;
+                Unit u = it.unit;
+                if (u.maxHealth >= Core.settings.getInt("unitdeathalarmhp")) {
+                    String alarm = "[#" + u.team.color + "] " + u.type + ": " + Mathf.ceil(u.lastX / 8) + "," + Mathf.ceil(u.lastY / 8);
+                    if (!(u.getControllerName() == null)) {
+                        alarm = alarm + " controlled by: " + u.getControllerName();
+                    }
+                    ChatFragment.ChatMessage msg = ui.chatfrag.addMessage(alarm, null, null, "", alarm);
+                    NetClient.findCoords(msg);
+                }
+            }
+        });
+
+
+        Events.on(PlayerUnitDeathEvent.class, it -> { // Alarm of death units with players
+            if (Core.settings.getBool("playerunitdeathalarm")) {
+                Unit u = it.unit;
+                if (!(u.getControllerName() == null)) {
+                    if (Core.settings.getInt("playerunitdeathalarmhp") >= 0) {
+                        LocalTime tempct = LocalTime.now();
+                        ActionsHistory.deathunitsplan.addFirst(new ActionsHistory.UnitsKilledByPlayers(u.getPlayer(), u, u.lastX, u.lastY, tempct));
+                        if (u.maxHealth >= Core.settings.getInt("playerunitdeathalarmhp")) {
+                            if (Core.settings.getInt("playerunitdeathalarmhp") == 0) return;
+                            String alarm = "[#" + u.team.color + "] " + u.type + ": " + Mathf.ceil(u.lastX / 8) + "," + Mathf.ceil(u.lastY / 8) + " controlled by: " + u.getControllerName();
+                            ChatFragment.ChatMessage msg = ui.chatfrag.addMessage(alarm, null, null, "", alarm);
+                            NetClient.findCoords(msg);
+                        }
+                    }
+                } else if (!(u.lastCommanded == null)) {
+                    if (Core.settings.getInt("playerunitdeathalarmhp") >= 0) {
+                        LocalTime tempct = LocalTime.now();
+                        ActionsHistory.deathunitscontrolplan.addFirst(new ActionsHistory.UnitsKilledByControllPlayers(u.lastCommanded, u, u.lastX, u.lastY, tempct));
+                        if (u.maxHealth >= Core.settings.getInt("playerunitdeathalarmhp")) {
+                            if (Core.settings.getInt("playerunitdeathalarmhp") == 0) return;
+                            String alarm = "[#" + u.team.color + "] " + u.type + ": " + Mathf.ceil(u.lastX / 8) + "," + Mathf.ceil(u.lastY / 8) + " last command by: " + u.lastCommanded();
+                            ChatFragment.ChatMessage msg = ui.chatfrag.addMessage(alarm, null, null, "", alarm);
+                            NetClient.findCoords(msg);
+                        }
+                    }
+
+                }
             }
         });
     }

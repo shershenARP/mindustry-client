@@ -18,6 +18,7 @@ import static mindustry.Vars.*;
 public class ItemSelection{
     private static TextField search;
     private static int rowCount;
+    public static Block blockSelect;
 
     public static <T extends UnlockableContent> void buildTable(Table table, Seq<T> items, Prov<T> holder, Cons<T> consumer){
         buildTable(table, items, holder, consumer, true);
@@ -54,6 +55,8 @@ public class ItemSelection{
         cont.defaults().size(40);
 
         if(search != null) search.clearText();
+
+        blockSelect = block;
 
         Runnable rebuild = () -> {
             group.clear();

@@ -263,7 +263,8 @@ public class ImagePacker{
     }
 
     static void replace(String name, Pixmap image){
-        replace(name, image, false);
+        Fi.get(name + ".png").writePng(image);
+        ((GenRegion)Core.atlas.find(name)).path.delete();
     }
 
     static void replace(String name, Pixmap image, boolean dispose){

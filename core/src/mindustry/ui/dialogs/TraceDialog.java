@@ -28,6 +28,7 @@ public class TraceDialog extends BaseDialog{
 
         buttons.button("JS Ban (Requires /js)", () -> {
             Call.sendChatMessage("/js Vars.netServer.admins.banPlayerID(" + info.uuid + ")");
+            ui.showInfo(info.uuid + " uuid JS Ban");
             Call.sendChatMessage("/js Vars.netServer.admins.banPlayerIP(" + info.ip + ")");
         }).width(420);
         if(!offline){

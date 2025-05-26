@@ -560,32 +560,33 @@ public class Block extends UnlockableContent implements Senseable{
     }
 
     public void addLiquidBar(Liquid liq){
-        addBar("liquid-" + liq.name, entity -> !liq.unlockedNow() ? null : new Bar(
-            () -> liq.localizedName,
-            liq::barColor,
-            () -> entity.liquids.get(liq) / liquidCapacity
+        addBar("liquid-" + liq.name + ":", entity -> !liq.unlockedNow() ? null : new Bar(
+                () -> "[#" + entity.team.color + "]" + liq.emoji() + ": " + Mathf.ceil(entity.liquids.get(liq) *10f)/10f + "/" + liquidCapacity,
+                liq::barColor,
+                () -> entity.liquids.get(liq) / liquidCapacity
         ));
     }
 
     /** Adds a liquid bar that dynamically displays a liquid type. */
     public <T extends Building> void addLiquidBar(Func<T, Liquid> current){
         addBar("liquid", entity -> new Bar(
-            () -> current.get((T)entity) == null || entity.liquids.get(current.get((T)entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get((T)entity).localizedName,
-            () -> current.get((T)entity) == null ? Color.clear : current.get((T)entity).barColor(),
-            () -> current.get((T)entity) == null ? 0f : entity.liquids.get(current.get((T)entity)) / liquidCapacity)
+                () -> current.get((T)entity) == null || entity.liquids.get(current.get((T)entity)) <= 0.001f ? Core.bundle.get("bar.liquid") : current.get((T)entity).localizedName +
+                        ": " + Mathf.ceil(entity.liquids.get(current.get((T)entity)) *10f)/10f + "/" + liquidCapacity,
+                () -> current.get((T)entity) == null ? Color.clear : current.get((T)entity).barColor(),
+                () -> current.get((T)entity) == null ? 0f : entity.liquids.get(current.get((T)entity)) / liquidCapacity)
         );
     }
 
     public void setBars(){
-        addBar("health", entity -> new Bar("stat.health", Pal.health, entity::healthf).blink(Color.white));
+        addBar("health", entity -> new Bar("[#" + entity.team.color + "]" + entity.health + "/" + entity.maxHealth, Pal.health, entity::healthf).blink(Color.white));
 
         if(consPower != null){
             boolean buffered = consPower.buffered;
             float capacity = consPower.capacity;
 
             addBar("power", entity -> new Bar(
-                () -> buffered ? Core.bundle.format("bar.poweramount", Float.isNaN(entity.power.status * capacity) ? "<ERROR>" : UI.formatAmount((int)(entity.power.status * capacity))) :
-                Core.bundle.get("bar.power"),
+                () -> buffered ? Core.bundle.format("bar.poweramount", Float.isNaN(entity.power.status * capacity) ? "<ERROR>" : "[#" + entity.team.color + "]" + UI.formatAmount((int)(entity.power.status * capacity))) :
+                "[#" + entity.team.color + "]" + Core.bundle.get("bar.power"),
                 () -> Pal.powerBar,
                 () -> Mathf.zero(consPower.requestedPower(entity)) && entity.power.graph.getPowerProduced() + entity.power.graph.getBatteryStored() > 0f ? 1f : entity.power.status)
             );
