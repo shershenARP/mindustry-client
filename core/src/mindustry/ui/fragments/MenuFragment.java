@@ -38,7 +38,9 @@ public class MenuFragment{
     private Button currentMenu;
     public MenuRenderer renderer;
     private Seq<MenuButton> customButtons = new Seq<>();
-    public String chan = Core.settings.getString("chan");
+    final String[] chan = {Core.settings.getString("chan")};
+    final Timer.Task[] resetTask = {null};
+
     public Boolean flagDangerStop = false;
 
     public void build(Group parent){
@@ -76,109 +78,43 @@ public class MenuFragment{
         }}, ui.discord::show).marginTop(9f).marginLeft(10f).tooltip("@discord").size(84, 45).name("discord"));
 
         parent.fill(t -> {
-            if (Core.settings.getString("chan") == null) {
+            if (!Core.settings.has("chan")) {
                 Core.settings.put("chan", "alpha-chan");
             }
-            Image dangerIcon = new Image(Core.atlas.find(chan + "-danger"));
+            Image img = new Image(Core.atlas.find(chan[0]));
+            Image dangerIcon = new Image(Core.atlas.find(chan[0] + "-danger"));
             dangerIcon.visible = false;
-            Image img = new Image(Core.atlas.find(chan));
+            dangerIcon.touchable = Touchable.disabled;
+
+            Core.scene.add(img);
+            Core.scene.add(dangerIcon);
+            
             Events.run(Trigger.update, () -> {
-                if (Core.settings.getString("chan") != chan) {
-                    chan = Core.settings.getString("chan");
+                String newChan = Core.settings.getString("chan");
+                if (!newChan.equals(chan[0])) {
+                    chan[0] = newChan;
+                    img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0])));
+                    dangerIcon.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-danger")));
                 }
+
                 dangerIcon.setPosition(img.x, img.y);
             });
-
-
-            img.touchable = Touchable.enabled;
-
-            Tooltip tooltip = new Tooltip(tt -> {
-                tt.background(Styles.black6);
-                tt.add("So cute.").style(Styles.outlineLabel);
-            });
-
-            final float[] offsetX = new float[1];
-            final float[] offsetY = new float[1];
-            final boolean[] dragging = {false};
-            final boolean[] hornyFlag = {false};
-
-
-            Core.scene.add(dangerIcon);
+            
             Events.on(TeamCoreDamage.class, e -> {
                 dangerIcon.visible = true;
                 dangerIcon.toFront();
             });
-            Timer.schedule(()->{
-                dangerIcon.visible = false;
-            }, 3,3, -1);
-            img.addListener(new InputListener() {
-                @Override
-                public boolean touchDown(InputEvent event, float x, float y, int pointer, KeyCode button) {
-                    offsetX[0] = x;
-                    offsetY[0] = y;
-                    dragging[0] = true;
-                    if (button == KeyCode.mouseRight) {
-                        final Image[] loves = new Image[4];
-                        hornyFlag[0] = true;
-                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan + "-UwU-horny")));
-
-                        for (var i=0;i<4;i++) {
-                            loves[i] = new Image(Core.atlas.find(chan + "-love"));
-                        }
-                        loves[0].setPosition(img.x - 12,img.y + 60);
-                        loves[1].setPosition(img.x + 35, img.y + 65);
-                        loves[2].setPosition(img.x + 45, img.y + 20);
-                        loves[3].setPosition(img.x - 15, img.y - 5);
-                        for (var i = 0; i<4; i++) {
-                            Core.scene.add(loves[i]);
-                        }
-                        Time.runTask(20f, () ->{
-                            for (var i = 0; i<4; i++) {
-                                loves[i].moveBy(0,2);
-                            }
-                        });
-                        Time.runTask(30f, () ->{
-                            for (var i = 0; i<4; i++) {
-                                loves[i].moveBy(0,2);
-                            }
-                        });
-                        Time.runTask(120f, () ->{
-                            img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan + "-UwU")));
-                            hornyFlag[0] = false;
-                            for (var i = 0; i<4; i++) {
-                                loves[i].remove();
-                            }
-                        });
-                        tooltip.show(img,x,y);
-                        Time.runTask(120f, tooltip::hide);
-                    }
-                    return true;
-                }
-                @Override
-                public void touchDragged(InputEvent event, float x, float y, int pointer) {
-                    // if (!hornyFlag[0]) {
-                        if (dragging[0]) {
-                            img.moveBy(x - offsetX[0], y - offsetY[0]);
-                        }
-                    // }
-                }
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Element from) {
-                    if (!hornyFlag[0]) {
-                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan + "-UwU")));
-                    }
-                }
-
-                @Override
-                public void exit(InputEvent event, float x, float y, int pointer, Element to) {
-                    if (!hornyFlag[0]) {
-                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan)));
-                    }
-                }
+            
+            Timer.schedule(() -> dangerIcon.visible = false, 3f, 3f, -1);
+            
+            Tooltip tooltip = new Tooltip(tt -> {
+                tt.background(Styles.black6);
+                tt.add("So cute.").style(Styles.outlineLabel);
             });
+            
+            addInteractionLogic(img, dangerIcon, tooltip, chan);
+            
             img.addListener(new HandCursorListener());
-
-            Core.scene.add(img);
         });
 
 
@@ -241,6 +177,103 @@ public class MenuFragment{
             Fonts.outline.setColor(Color.white);
             Fonts.outline.draw(versionText, fx, fy - logoh/2f - Scl.scl(2f), Align.center);
         }).touchable = Touchable.disabled;
+    }
+
+    private Image[] createHearts(String chan, float baseX, float baseY) {
+        return new Image[] {
+                createHeart(chan, baseX - 12, baseY + 60),
+                createHeart(chan, baseX + 35, baseY + 65),
+                createHeart(chan, baseX + 45, baseY + 20),
+                createHeart(chan, baseX - 15, baseY - 5)
+        };
+    }
+
+    private Image createHeart(String chan, float x, float y) {
+        Image heart = new Image(Core.atlas.find(chan + "-love"));
+        heart.setPosition(x, y);
+        return heart;
+    }
+
+    private void animateHearts(Image[] hearts) {
+        float delay = 0f;
+        for (int i = 0; i < 2; i++) {
+            Time.runTask(delay += 10f, () -> {
+                for (Image heart : hearts) {
+                    heart.moveBy(0, 2f);
+                }
+            });
+        }
+    };
+
+    private void addInteractionLogic(Image img, Image dangerIcon, Tooltip tooltip, String[] chan) {
+        final float[] offsetX = new float[1];
+        final float[] offsetY = new float[1];
+        final boolean[] dragging = {false};
+        final boolean[] isHorny = {false};
+
+        img.touchable = Touchable.enabled;
+
+        img.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, KeyCode button) {
+                offsetX[0] = x;
+                offsetY[0] = y;
+                dragging[0] = true;
+
+                if (button == KeyCode.mouseRight) {
+                    isHorny[0] = true;
+
+                    img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-UwU-horny")));
+
+                    Image[] hearts = createHearts(chan[0], img.x, img.y);
+                    for (Image heart : hearts) Core.scene.add(heart);
+
+                    animateHearts(hearts);
+
+                    if (resetTask[0] != null) {
+                        resetTask[0].cancel();
+                    }
+
+                    resetTask[0] = Time.runTask(120f, () -> {
+                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-UwU")));
+                        isHorny[0] = false;
+                        resetTask[0] = null;
+                    });
+
+                    Time.runTask(120f, () -> {
+                        for (Image heart : hearts) {
+                            heart.remove();
+                        }
+                    });
+
+                    tooltip.show(img, x, y);
+                    Time.runTask(120f, tooltip::hide);
+                }
+
+                return true;
+            }
+
+            @Override
+            public void touchDragged(InputEvent event, float x, float y, int pointer) {
+                if (dragging[0]) {
+                    img.moveBy(x - offsetX[0], y - offsetY[0]);
+                }
+            }
+
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Element from) {
+                if (!isHorny[0]) {
+                    img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-UwU")));
+                }
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Element to) {
+                if (!isHorny[0]) {
+                    img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0])));
+                }
+            }
+        });
     }
 
     private void buildMobile(){
