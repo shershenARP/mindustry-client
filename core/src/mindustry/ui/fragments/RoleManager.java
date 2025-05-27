@@ -18,6 +18,16 @@ public class RoleManager {
             role = "\uE84D";
             roles.put(player, role);
         };
+
+        if (role == "Attack") {
+            role = "\uE86D";
+            roles.put(player, role);
+        }
+
+        if (role == "Logist") {
+            role = "\uE83E";
+            roles.put(player, role);
+        }
     }
 
     public static String getRole(Player player) {
@@ -28,6 +38,8 @@ public class RoleManager {
         switch(role) {
             case "\uE853": return Pal.stat;
             case "\uE84D": return Pal.unitBack;
+            case "\uE86D": return Pal.unitFront;
+            case "\uE83E": return Pal.ammo;
             default: return Color.gray;
         }
     }

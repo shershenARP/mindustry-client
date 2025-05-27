@@ -9,6 +9,7 @@ import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.annotations.Annotations.*;
+import mindustry.content.Planets;
 import mindustry.content.TechTree.*;
 import mindustry.game.EventType.*;
 import mindustry.graphics.*;
@@ -33,6 +34,8 @@ public abstract class UnlockableContent extends MappableContent{
     public boolean inlineDescription = true;
     /** Whether details of blocks are hidden in custom games if they haven't been unlocked in campaign mode. */
     public boolean hideDetails = true;
+    /** Whether this is hidden from the Core Database. */
+    public boolean hideDatabase = false;
     /** If false, all icon generation is disabled for this content; createIcons is not called. */
     public boolean generateIcons = true;
     /** Special logic icon ID. */
@@ -43,6 +46,19 @@ public abstract class UnlockableContent extends MappableContent{
     public TextureRegion uiIcon;
     /** Icon of the full content. Unscaled.*/
     public TextureRegion fullIcon;
+    /** If true, this content will appear in all database tabs. */
+    public boolean allDatabaseTabs = false;
+    /**
+     * Planets that this content is made for. If empty, a planet is decided based on item requirements.
+     * Currently, this is only meaningful for blocks.
+     * */
+    public ObjectSet<Planet> shownPlanets = new ObjectSet<>();
+    /**
+     * Content - usually a planet - that dictates which database tab(s) this content will appear in.
+     * If nothing is defined, it will use the values in shownPlanets.
+     * If shownPlanets is also empty, it will use Serpulo as the "default" tab.
+     * */
+    public ObjectSet<UnlockableContent> databaseTabs = new ObjectSet<>();
     /** The tech tree node for this content, if applicable. Null if not part of a tech tree. */
     public @Nullable TechNode techNode;
     /** Tech nodes for all trees that this content is part of. */
@@ -60,6 +76,15 @@ public abstract class UnlockableContent extends MappableContent{
     }
 
     @Override
+    public void postInit(){
+        super.postInit();
+
+        for(Planet p : shownPlanets){
+            databaseTabs.add(p);
+        }
+    }
+
+    @Override
     public void loadIcon(){
         fullIcon =
             Core.atlas.find(getContentType().name() + "-" + name + "-full",
@@ -69,6 +94,10 @@ public abstract class UnlockableContent extends MappableContent{
             Core.atlas.find(name + "1")))));
 
         uiIcon = Core.atlas.find(getContentType().name() + "-" + name + "-ui", fullIcon);
+    }
+
+    public boolean isOnPlanet(@Nullable Planet planet){
+        return planet == null || planet == Planets.sun || shownPlanets.isEmpty() || shownPlanets.contains(planet);
     }
 
     public int getLogicId(){
