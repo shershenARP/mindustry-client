@@ -1,5 +1,0 @@
-sourceSets.main.java.srcDirs = ["src/"]
-sourceSets.main.kotlin.srcDirs = ["src/"]
-repositories{
-    mavenCentral()
-}
