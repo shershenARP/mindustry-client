@@ -107,7 +107,7 @@ public class MenuFragment{
                 }
 
                 if (Core.settings.getString("chan").equals("oct-chan")) {
-                    dangerIcon.setPosition(img.x - 15f, img.y - 6f); // Подбери нужные значения
+                    dangerIcon.setPosition(img.x - 15f, img.y - 6f);
                 } else {
                     dangerIcon.setPosition(img.x, img.y);
 
