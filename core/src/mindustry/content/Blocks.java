@@ -3204,6 +3204,7 @@ public class Blocks{
                     despawnEffect = Fx.none;
                     status = StatusEffects.burning;
                     hittable = false;
+                    trailEffect = Fx.hardTrail;
                 }}
             );
             recoil = 0f;
@@ -3263,7 +3264,7 @@ public class Blocks{
                         frontColor = trailColor = hitColor = Pal.lightishOrange;
                         backColor = Pal.lightOrange;
                     makeFire = true;
-                    trailEffect = Fx.incendTrail;
+                    trailEffect = Fx.hardTrail;
                     ammoMultiplier = 4f;
                 }}
             );
@@ -3436,6 +3437,7 @@ public class Blocks{
                     ammoMultiplier = 5f;
                     hitEffect = Fx.blastExplosion;
                     status = StatusEffects.burning;
+                    trailEffect = Fx.hardTrail;
                 }},
                 Items.surgeAlloy, new MissileBulletType(3.7f, 18){{
                     width = 8f;
@@ -3517,6 +3519,7 @@ public class Blocks{
                     splashDamageRadius = 22f;
 
                     makeFire = true;
+                    trailEffect = Fx.hardTrail;
                     lifetime = 60f;
                 }},
                 Items.silicon, new BasicBulletType(3f, 15, "bullet"){{
@@ -3742,7 +3745,7 @@ public class Blocks{
                         frontColor = Pal.lightishOrange;
                         backColor = hitColor = Pal.lightOrange;
                     makeFire = true;
-                    trailEffect = Fx.incendTrail;
+                    trailEffect = Fx.hardTrail;
                     ammoMultiplier = 4f;
                 }},
                 Items.blastCompound, new ArtilleryBulletType(2f, 20, "shell"){{
@@ -3991,6 +3994,8 @@ public class Blocks{
 
                         backColor = hitColor = trailColor = Pal.thoriumAmmoBack;
                         frontColor = Pal.thoriumAmmoFront;
+                        trailLength = 5;
+                        trailWidth = 5;
                 }},
                 Items.pyratite, new BasicBulletType(7f, 70){{
                     hitSize = 5;
