@@ -88,32 +88,46 @@ public class MenuFragment{
 
             Core.scene.add(img);
             Core.scene.add(dangerIcon);
-            
+
             Events.run(Trigger.update, () -> {
                 String newChan = Core.settings.getString("chan");
                 if (!newChan.equals(chan[0])) {
                     chan[0] = newChan;
                     img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0])));
                     dangerIcon.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-danger")));
+                    TextureRegion newRegion = Core.atlas.find(chan[0] + "-danger");
+
+                    if (Core.settings.getString("chan").equals("oct-chan")) {
+                        if (dangerIcon.getImageWidth() != 76 || dangerIcon.getImageHeight() != 76) {
+                            dangerIcon.setSize(76);
+                        }
+                    } else if (dangerIcon.getImageWidth() != 40 || dangerIcon.getImageHeight() != 48) {
+                        dangerIcon.setSize(40, 48);
+                    }
                 }
 
-                dangerIcon.setPosition(img.x, img.y);
+                if (Core.settings.getString("chan").equals("oct-chan")) {
+                    dangerIcon.setPosition(img.x - 15f, img.y - 6f); // Подбери нужные значения
+                } else {
+                    dangerIcon.setPosition(img.x, img.y);
+
+                }
             });
-            
+
             Events.on(TeamCoreDamage.class, e -> {
                 dangerIcon.visible = true;
                 dangerIcon.toFront();
             });
-            
+
             Timer.schedule(() -> dangerIcon.visible = false, 3f, 3f, -1);
-            
+
             Tooltip tooltip = new Tooltip(tt -> {
                 tt.background(Styles.black6);
                 tt.add("So cute.").style(Styles.outlineLabel);
             });
-            
+
             addInteractionLogic(img, dangerIcon, tooltip, chan);
-            
+
             img.addListener(new HandCursorListener());
         });
 

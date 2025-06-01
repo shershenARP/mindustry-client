@@ -42,33 +42,18 @@ class ClientLogic {
 
             Timer.schedule({
                 app.post {
-                    when (val vote = settings.getInt("automapvote")) {
-                        1, 2, 3 -> Server.current.mapVote(vote - 1)
-                        4 -> Server.current.mapVote(Random.nextInt(0..2))
-                    }
                     val arg = switchTo?.removeFirstOrNull()
-                    if (arg != null) {
-                        if (arg is Host) {
-                            NetClient.connect(arg.address, arg.port)
-                        } else {
-                            if (arg is UnitType) ui.unitPicker.pickUnit(arg)
-                            switchTo = null
+                    if (arg != null && arg is Host) {
+                        when (val vote = settings.getInt("automapvote")) {
+                            1, 2, 3 -> Server.current.mapVote(vote - 1)
+                            4 -> Server.current.mapVote(Random.nextInt(0..2))
                         }
-                        // Game join text after hh
-                        if (settings.getString("gamejointext")?.isNotBlank() == true) {
-                            val input = settings.getString("gamejointext").split("(?<!\\\\);".toRegex()) // Hacky way to allow escaping the split
-                            val out = StringBuilder()
-                            Log.debug("The split input: $input")
-                            input.forEach { // Try running each bit as a command, this code is terribly inefficient but should get the job done so I don't care
-                                val clean = if (!it.endsWith("\\\\;")) it.removeSuffix(";") else it // FINISHME: Remove the \ before the ; if needed
-                                Log.debug("Input part: '$it' ('$clean')")
-                                val res = ChatFragment.handleClientCommand(clean, false)
-                                if (res.type == CommandHandler.ResponseType.noCommand) out.append(clean) // If the command doesn't exist we pass the text through to the output, otherwise we don't pass it to the output. this is kind of hacky but i don't care.
-                            }
-                            Log.debug("Sent message: $out")
-                            Call.sendChatMessage(out.toString())
-                        }
+                        NetClient.connect(arg.address, arg.port)
+                    } else if (arg is UnitType) {
+                        ui.unitPicker.pickUnit(arg)
+                        switchTo = null
                     }
+                    Call.sendChatMessage(settings.getString("gamejointext"))
                 }
             }, .1F)
 

@@ -1016,7 +1016,7 @@ public class Fx{
         });
     }),
 
-    blastExplosion = new Effect(22, e -> {
+    blastExplosion = new Effect(60, e -> {
         color(Pal.missileYellow);
 
         e.scaled(6, i -> {
@@ -1026,7 +1026,7 @@ public class Fx{
 
         color(Color.gray);
 
-        randLenVectors(e.id, 5, 2f + 23f * e.finpow(), (x, y) -> {
+        randLenVectors(e.id, 20, 2f + 23f * e.finpow(), (x, y) -> {
             Fill.circle(e.x + x, e.y + y, e.fout() * 4f + 0.5f);
         });
 
@@ -1097,6 +1097,60 @@ public class Fx{
         color(Pal.lightOrange);
         Fill.circle(e.x, e.y, e.rotation * e.fout());
     }),
+
+    // я не умею делать эффекты. Не забыть доделать.
+    hardTrail = new Effect(180f, e -> {
+        color(Pal.lightishGray, Color.gray, e.fin());
+        alpha(e.fout() * 0.8f);
+        rand.setSeed(e.id);
+
+        // Основное смещение назад по углу
+        Vec2 offset = Tmp.v1.trns(e.rotation + 180f, 6f * e.fout());
+
+        // Добавим небольшую компенсацию по X, чтобы убрать смещение влево
+        // Этот параметр можно подобрать экспериментально, например:
+        float correctionX = 6f * e.fout(); // положительный сдвиг вправо
+
+        float[] x = {e.x + offset.x + correctionX};
+        float[] y = {e.y + offset.y + Interp.pow2Out.apply(e.fin()) * 1.5f};
+
+        float radius = 2.5f + e.fin() * 3.0f;
+        // можно убрать
+        float spread = rand.range(3f) * e.fin();
+        float perpAngle = e.rotation + 90f;
+        x[0] += Angles.trnsx(perpAngle, spread) + e.fin() * rand.range(5);
+        y[0] += Angles.trnsy(perpAngle, spread) + e.fin() * rand.range(5);
+        //
+
+
+        Fill.circle(x[0], y[0], radius);
+    }),
+
+    hardBlastExplosion = new Effect(120, e -> {
+        color(Pal.lightishGray, Color.gray, e.fin());
+        alpha(e.fout() * 0.8f);
+
+        e.scaled(6, i -> {
+            stroke(3f * i.fout());
+            Lines.circle((e.x + e.fin() * rand.range(5)), (e.y + e.fin() * rand.range(5)), 3f + i.fin() * 15f);
+        });
+
+        color(Color.gray);
+
+        randLenVectors(e.id, 5, 2f + 23f * e.finpow(), (x, y) -> {
+            Fill.circle(e.x + x + e.fin() * rand.range(5), e.y + y + e.fin() * rand.range(5), e.fout() * 4f + 0.5f);
+        });
+
+        color(Color.gray);
+        stroke(e.fout());
+
+        randLenVectors(e.id + 1, 4, 1f + 23f * e.finpow(), (x, y) -> {
+            lineAngle(e.x + x + e.fin() * rand.range(5), e.y + y + e.fin() * rand.range(5), Mathf.angle(x, y), 1f + e.fout() * 3f);
+        });
+
+        Drawf.light(e.x, e.y, 45f, Color.gray, 0.8f * e.fout());
+    }),
+
 
     missileTrail = new Effect(50, e -> {
         color(e.color);
