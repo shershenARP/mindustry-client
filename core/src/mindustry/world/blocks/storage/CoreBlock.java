@@ -139,6 +139,14 @@ public class CoreBlock extends StorageBlock{
     }
 
     @Override
+    public void postInit(){
+        super.postInit();
+
+        //sync shown planets with unit spawned
+        unitType.shownPlanets.addAll(shownPlanets);
+    }
+
+    @Override
     public boolean canBreak(Tile tile){
         return state.isEditor();
     }

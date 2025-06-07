@@ -108,6 +108,7 @@ public class ContentLoader{
     public void init(){
         var s = Time.nanos();
         initialize(Content::init);
+        initialize(Content::postInit);
         if(logicVars != null) logicVars.init();
         Events.fire(new ContentInitEvent());
         Log.debug("ContentInit Async: @", Time.millisSinceNanos(s));

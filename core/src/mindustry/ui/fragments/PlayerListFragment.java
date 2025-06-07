@@ -88,9 +88,9 @@ public class PlayerListFragment{
         Groups.player.copy(players);
 
         var target = Spectate.INSTANCE.getPos() instanceof Player p ? p :
-            Navigation.currentlyFollowing instanceof AssistPath p && p.getAssisting() != null ? p.getAssisting() :
-            Navigation.currentlyFollowing instanceof UnAssistPath p ? p.target :
-            null;
+                Navigation.currentlyFollowing instanceof AssistPath p && p.getAssisting() != null ? p.getAssisting() :
+                        Navigation.currentlyFollowing instanceof UnAssistPath p ? p.target :
+                                null;
         players.sort(Structs.comps(Structs.comparingBool(p -> p != target), Structs.comps(Structs.comparing(Player::team), Structs.comps(Structs.comparingBool(p -> !p.admin), Structs.comparingBool(p -> !(p.fooUser || p.isLocal()))))));
         if(search.getText().length() > 0) players.retainAll(p -> Strings.stripColors(p.name().toLowerCase()).contains(search.getText().toLowerCase()));
 
@@ -117,18 +117,21 @@ public class PlayerListFragment{
             };
             table.margin(8);
             table.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
-            table.name = user.name();
+            String role = RoleManager.getRole(user);
+            String health = getHealWithColor(user);
+
+            table.name = Core.settings.getBool("customtab") ? "[#" + RoleManager.roleColorFor(RoleManager.getRole(user)) + "]" + role + " - " + "[#" + user.color().toString().toUpperCase() + "]" + user.name() + ":" + health : user.name;
 
             button.add(table).size(h);
             button.button( // This is by far the worst line of code I have ever written, its split so its not 500+ chars but still jesus
-                Core.input.shift() ? String.valueOf(user.id) :
-                    Core.input.ctrl() ? "Groups.player.getByID(" + user.id + ")" :
-                    "[#" + user.color().toString().toUpperCase() + "]" + user.name() + (Core.settings.getBool("showuserid") ? " [accent](#" + user.id + ")" : ""),
-                Styles.nonetdef, () ->
-                Core.app.setClipboardText(Core.input.shift() ? String.valueOf(user.id) :
-                    Core.input.ctrl() ? "Groups.player.getByID(" + user.id + ")" :
-                    Strings.stripColors(user.name))
-            ).wrap().width(400).growY().pad(10);
+                    Core.input.shift() ? String.valueOf(user.id) :
+                            Core.input.ctrl() ? "Groups.player.getByID(" + user.id + ")" :
+                                    Core.settings.getBool("customtab") ? "[#" + RoleManager.roleColorFor(RoleManager.getRole(user)) + "]" + role + " [white]- " + "[#" + user.color().toString().toUpperCase() + "]" + user.name() + "[white]: " + health + (Core.settings.getBool("showuserid") ? " [accent](#" + user.id + ")" : "") : user.name() + (Core.settings.getBool("showuserid") ? " [accent](#" + user.id + ")" : ""),
+                    Styles.nonetdef, () ->
+                            Core.app.setClipboardText(Core.input.shift() ? String.valueOf(user.id) :
+                                    Core.input.ctrl() ? "Groups.player.getByID(" + user.id + ")" :
+                                            Strings.stripColors(user.name))
+            ).wrap().width(Core.settings.getBool("customtab") ? 600 : 400).growY().pad(10);
 
             if(user.admin && !(!user.isLocal() && net.server())) button.image(Icon.admin).padRight(7.5f);
             if(user.fooUser || (user.isLocal() && Core.settings.getBool("displayasuser"))) button.image(Icon.wrench).padRight(7.5f).tooltip("@client.clientuser");
@@ -150,7 +153,7 @@ public class PlayerListFragment{
                 imageOverColor = Color.lightGray;
             }};
 
-            if(net.server() || (Server.current.adminui() && (!user.admin || user.isLocal()))){
+            if(net.server() || ((player.admin || Server.current.adminui()) && (!user.admin || user.isLocal()))){
                 button.add().growY();
 
                 float bs = h / 2f;
@@ -159,36 +162,36 @@ public class PlayerListFragment{
                     t.defaults().size(bs);
                     if(!user.isLocal()){
                         t.button(Icon.hammer, ustyle,
-                        () -> ui.showConfirm("@confirm", Core.bundle.format("confirmban", user.name()), () -> {
-                            Server.current.handleBan(user);
-                        })).tooltip("@player.ban");
+                                () -> ui.showConfirm("@confirm", Core.bundle.format("confirmban", user.name()), () -> {
+                                    Server.current.handleBan(user);
+                                })).tooltip("@player.ban");
                         t.button(Icon.cancel, ustyle,
-                        () -> ui.showConfirm("@confirm", Core.bundle.format("confirmkick", user.name()), () -> Call.adminRequest(user, AdminAction.kick, null)))
-                        .tooltip("@player.kick");
+                                        () -> ui.showConfirm("@confirm", Core.bundle.format("confirmkick", user.name()), () -> Call.adminRequest(user, AdminAction.kick, null)))
+                                .tooltip("@player.kick");
 
                         t.row();
 
                         t.button(Icon.admin, style, () -> {
-                            if(net.client()) return;
+                                    if(net.client()) return;
 
-                            String id = user.uuid();
+                                    String id = user.uuid();
 
-                            if(user.admin){
-                                ui.showConfirm("@confirm", Core.bundle.format("confirmunadmin",  user.name()), () -> {
-                                    netServer.admins.unAdminPlayer(id);
-                                    user.admin = false;
-                                });
-                            }else{
-                                ui.showConfirm("@confirm", Core.bundle.format("confirmadmin",  user.name()), () -> {
-                                    netServer.admins.adminPlayer(id, user.usid());
-                                    user.admin = true;
-                                });
-                            }
-                        }).update(b -> b.setChecked(user.admin))
-                            .disabled(b -> net.client())
-                            .touchable(() -> net.client() ? Touchable.disabled : Touchable.enabled)
-                            .checked(user.admin)
-                            .tooltip("@player.admin");
+                                    if(user.admin){
+                                        ui.showConfirm("@confirm", Core.bundle.format("confirmunadmin",  user.name()), () -> {
+                                            netServer.admins.unAdminPlayer(id);
+                                            user.admin = false;
+                                        });
+                                    }else{
+                                        ui.showConfirm("@confirm", Core.bundle.format("confirmadmin",  user.name()), () -> {
+                                            netServer.admins.adminPlayer(id, user.usid());
+                                            user.admin = true;
+                                        });
+                                    }
+                                }).update(b -> b.setChecked(user.admin))
+                                .disabled(b -> net.client())
+                                .touchable(() -> net.client() ? Touchable.disabled : Touchable.enabled)
+                                .checked(user.admin)
+                                .tooltip("@player.admin");
 
                         t.button(Icon.zoom, ustyle, () -> Call.adminRequest(user, AdminAction.trace, null)).tooltip("@player.trace");
                     }
@@ -224,15 +227,15 @@ public class PlayerListFragment{
                 button.add().growY();
 
                 button.button(Icon.hammer, ustyle,
-                () -> {
-                    ui.showTextInput("@votekick.reason", Core.bundle.format("votekick.reason.message", user.name()), "", reason -> {
-                        Call.sendChatMessage("/votekick #" + user.id() + " " + reason);
-                        if(Server.io.b() && (user.trace != null || user.serverID != null))
-                            ui.showConfirm("@confirm", "Do you want to rollback this player's actions?", () ->
-                                Call.sendChatMessage(Strings.format("/rollback @ 5", user.trace != null ? user.trace.uuid : user.serverID))
-                            );
-                    });
-                }).size(h/2);
+                        () -> {
+                            ui.showTextInput("@votekick.reason", Core.bundle.format("votekick.reason.message", user.name()), "", reason -> {
+                                Call.sendChatMessage("/votekick #" + user.id() + " " + reason);
+                                if(Server.io.b() && (user.trace != null || user.serverID != null))
+                                    ui.showConfirm("@confirm", "Do you want to rollback this player's actions?", () ->
+                                            Call.sendChatMessage(Strings.format("/rollback @ 5", user.trace != null ? user.trace.uuid : user.serverID))
+                                    );
+                            });
+                        }).size(h/2);
             }
             if (user != player) {
                 button.button(Icon.lock, ustyle, // Mute player
@@ -240,16 +243,16 @@ public class PlayerListFragment{
                 button.button(Icon.copy, ustyle, // Assist/copy
                         () -> Navigation.follow(new AssistPath(user,
                                 Core.input.shift() ? AssistPath.Type.FreeMove :
-                                Core.input.ctrl() ? AssistPath.Type.Cursor :
-                                Core.input.alt() ? AssistPath.Type.BuildPath :
-                                                    AssistPath.Type.Regular, Core.settings.getBool("circleassist"))
+                                        Core.input.ctrl() ? AssistPath.Type.Cursor :
+                                                Core.input.alt() ? AssistPath.Type.BuildPath :
+                                                        AssistPath.Type.Regular, Core.settings.getBool("circleassist"))
                         )).size(h / 2).tooltip("@client.assist");
                 button.button(Icon.cancel, ustyle, // Unassist/block
                         () -> Navigation.follow(new UnAssistPath(user, !Core.input.shift()))).size(h / 2).tooltip("@client.unassist");
                 button.button(Icon.move, ustyle, // Goto
-                    () -> Navigation.navigateTo(user)).size(h / 2).tooltip("@client.goto");
+                        () -> Navigation.navigateTo(user)).size(h / 2).tooltip("@client.goto");
                 button.button(Icon.zoom, ustyle, // Spectate/stalk
-                    () -> Spectate.INSTANCE.spectate(user, Core.input.shift())).tooltip("@client.spectate");
+                        () -> Spectate.INSTANCE.spectate(user, Core.input.shift())).tooltip("@client.spectate");
             }
 
             if (Server.current.freeze.canRun()) { // Apprentice+ on io, Colonel+ on phoenix
@@ -277,14 +280,14 @@ public class PlayerListFragment{
                 }).tooltip("@client.freeze");
             }
 
-            content.add(button).padBottom(-6).width(750).maxHeight(h + 14);
+            content.add(button).padBottom(-6).width(Core.settings.getBool("customtab") ? 1050f : 750f).maxHeight(h + 14);
             content.row();
             content.image().height(4f).color(shouldShowTeams() ? user.team().color : Pal.gray).growX();
             content.row();
         }
 
         if(!found){
-            content.add(Core.bundle.format("players.notfound")).padBottom(6).width(600f).maxHeight(h + 14);
+            content.add(Core.bundle.format("players.notfound")).padBottom(6).width(Core.settings.getBool("customtab") ? 1050f : 600f).maxHeight(h + 14);
         }
 
         content.marginBottom(5);
@@ -292,9 +295,9 @@ public class PlayerListFragment{
 
     public static boolean shouldShowTeams(){
         return (
-            state.rules.pvp ||
-            (Vars.player != null && Groups.player.find(p -> p.team() != Vars.player.team()) != null) ||
-            Core.settings.getBool("alwaysshowteams")
+                state.rules.pvp ||
+                        (Vars.player != null && Groups.player.find(p -> p.team() != Vars.player.team()) != null) ||
+                        Core.settings.getBool("alwaysshowteams")
         );
     }
 
@@ -306,6 +309,23 @@ public class PlayerListFragment{
             Core.scene.setKeyboardFocus(null);
             search.clearText();
         }
+    }
+
+    public String getHealWithColor(Player user) {
+        if (user.unit().hasEffect(StatusEffects.invincible)) {
+            return "[stat]" + user.unit().health;
+        } else if (user.unit().health > user.unit().maxHealth) {
+            return "[#a9d8ff]" + user.unit().health;
+        } else if (user.unit().health/user.unit().maxHealth > 0.75) {
+            return "[lime]" + user.unit().health;
+        } else if (user.unit().health/user.unit().maxHealth > 0.50) {
+            return "[yellow]" + user.unit().health;
+        } else if (user.unit().health/user.unit().maxHealth > 0.19) {
+            return "[#B40404]" + user.unit().health;
+        } else if (user.unit().health > 0){
+            return "[gray]" + user.unit().health;
+        };
+        return "null";
     }
 
     public boolean shown(){

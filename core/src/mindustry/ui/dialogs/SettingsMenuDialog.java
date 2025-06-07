@@ -483,6 +483,56 @@ public class SettingsMenuDialog extends BaseDialog{
         }
         // End Client Settings
 
+        // FD Settings
+        client.category("miscfd");
+        client.checkPref("tilefragment", false);
+        client.checkPref("historyfragment", true);
+        client.checkPref("blocksplayersplan", false);
+        client.checkPref("blocksplayersplancount", false);
+        client.sliderPref("fadedblockplayer", 10, 0, 50, 1, String::valueOf);
+        client.sliderPref("fadedblockallplayers", 10, 0, 50, 1, String::valueOf);
+        client.checkPref("unitatchat", false);
+        client.checkPref("shownivigationpath", false);
+        client.checkPref("ignoreunit", false);
+        client.checkPref("afkmodespam", true);
+        client.checkPref("mineafterheal", true);
+        client.checkPref("coredeathalarm", false);
+        client.checkPref("coredeathalarmrecap", true);
+        client.checkPref("unitdeathalarm", false);
+        client.sliderPref("unitdeathalarmhp", 15000, 0, 24000, 50, String::valueOf);
+        client.checkPref("playerunitdeathalarm", false);
+        client.sliderPref("playerunitdeathalarmhp", 15000, 0, 24000, 50, String::valueOf);
+        client.sliderPref("yoffssetfdpamel", -100, -500, 500, 10, String::valueOf);
+        client.sliderPref("buttonsizefdpamel", 35, 5, 100, 1, String::valueOf);
+        client.textPref("uchatcolor", "");
+        client.updateUuid();
+        client.checkPref("autoconnectme", false);
+        client.textPref("adrip", "");
+        client.textPref("adrport", "");
+        client.checkPref("offrender", false);
+        client.checkPref("canioffrender", false);
+        client.checkPref("offblacklistmods", false);
+        client.checkPref("unitcontrollpanel", false);
+        client.sliderPref("controlunitpaneloffset", 0, -1000, 1000, 10, String::valueOf);
+        client.checkPref("deserter", false);
+        client.checkPref("assistbutnuance", false);
+        //client.checkPref("circleantigrief", false);
+        client.checkPref("itemslog", false);
+        client.checkPref("ihateattems", true);
+        client.checkPref("attemmreadflag", true);
+        client.checkPref("autortv", false);
+        client.checkPref("mobilegayming", false);
+        client.checkPref("ignorevoidalarm", false);
+        client.checkPref("snipermode", false);
+
+        // Customization FFF
+        client.category("cfff");
+        client.checkPref("fdpanelenable", true);
+        client.checkPref("customtab", true);
+        client.textPref("logcolorbuilt", "#41e89a");
+        client.textPref("logcolorbroke", "#f25c5c");
+        client.textPref("logcolorconfigured", "#7457ce");
+        client.textPref("logcolorrotated", "accent");
 
         game.sliderPref("saveinterval", 60, 10, 5 * 120, 10, i -> Core.bundle.format("setting.seconds", i));
         game.checkPref("autotarget", false);
@@ -876,6 +926,13 @@ public class SettingsMenuDialog extends BaseDialog{
             rebuild();
         }
 
+        public void textPrefFi(String name, String def){
+            list.add(new TextSetting(name, def, null));
+            Fi file = new Fi(name);
+            file.writeString(def, false);
+            rebuild();
+        }
+
         public void textPref(String name, String def, Cons<String> changed){
             list.add(new TextSetting(name, def, changed));
             settings.defaults(name, def);
@@ -1171,6 +1228,39 @@ public class SettingsMenuDialog extends BaseDialog{
                             urlChanged = true;
                             settings.put(name, text);
                         }).width(450).get().setMessageText("mindustry-antigrief/mindustry-client-v7-builds");
+                    }).left().expandX().padTop(3).height(32).padBottom(3);
+                    table.row();
+                }
+            });
+        }
+
+        private void updateUuid(){
+            settings.defaults("updateuuid", settings.getString("uuid"));
+            if (!Version.updateUrl.isEmpty()) settings.put("updateurl", Version.updateUrl); // overwrites updateurl on every boot, shouldn't be a real issue
+            pref(new Setting("updateuuid") {
+                boolean urlChanged;
+
+                @Override
+                public void add(SettingsTable table) { // Update URL with update button FINISHME: Move this to TextPref when i decide im willing to spend 6 hours doing so
+                    name = "updateuuid";
+                    title = bundle.get("setting." + name + ".name");
+
+                    table.table(t -> {
+                        t.button(Icon.refresh, Styles.settingTogglei, 32, () -> {
+                            ui.loadfrag.show();
+                            becontrol.checkUpdate(result -> {
+                                ui.loadfrag.hide();
+                                urlChanged = false;
+                                Core.settings.put("uuid", settings.getString("updateuuid"));
+                            });
+                        }).update(u -> u.setChecked(becontrol.isUpdateAvailable() || urlChanged)).padRight(4);
+                        Label label = new Label(title);
+                        t.add(label).minWidth(label.getPrefWidth() / Scl.scl(1.0F) + 25.0F);
+                        t.field(settings.getString(name), text -> {
+                            becontrol.setUpdateAvailable(false); // Set this to false as we don't know if this is even a valid URL.
+                            urlChanged = true;
+                            settings.put(name, text);
+                        }).width(450).get().setMessageText(settings.getString("uuid"));
                     }).left().expandX().padTop(3).height(32).padBottom(3);
                     table.row();
                 }

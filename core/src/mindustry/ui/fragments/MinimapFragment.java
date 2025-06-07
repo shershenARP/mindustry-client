@@ -10,6 +10,7 @@ import arc.scene.*;
 import arc.scene.event.*;
 import arc.scene.ui.layout.*;
 import arc.util.*;
+import mindustry.client.navigation.Markers;
 import mindustry.gen.*;
 import mindustry.input.*;
 import mindustry.ui.*;
@@ -50,7 +51,28 @@ public class MinimapFragment{
                 Rect bounds = getRectBounds();
                 renderer.minimap.drawEntities(bounds.x, bounds.y, bounds.width, bounds.height, zoom, true);
             }
+            if (Core.settings.getBool("show-minimap-markers", true)) {
+                for (Markers.Marker marker : Markers.INSTANCE) {
+                    Rect bounds = getRectBounds();
 
+                    float nx = marker.getUnitX() / (world.width() * tilesize);
+                    float ny = marker.getUnitY() / (world.height() * tilesize);
+
+                    float mapX = bounds.x + bounds.width * nx;
+                    float mapY = bounds.y + bounds.height * ny;
+
+                    Draw.color(Color.black);
+                    Fill.circle(mapX, mapY, 8);
+                    Draw.color(marker.getColor());
+                    Fill.circle(mapX, mapY, 5);
+
+                    Draw.color(Color.white);
+
+                    Font font = Fonts.outline;
+                    font.getData().setScale(1f / Scl.scl(1f)); //масштабируем под экран
+                    font.draw("[white]" + marker.getName(), mapX + 12, mapY + 10);
+                }
+            }
             Draw.reset();
         });
 

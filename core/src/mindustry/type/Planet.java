@@ -153,6 +153,9 @@ public class Planet extends UnlockableContent{
     /** Loads the planet grid outline mesh. Clientside only. */
     public Prov<Mesh> gridMeshLoader = () -> MeshBuilder.buildPlanetGrid(grid, outlineColor, outlineRad * radius);
 
+    /** If true, all content in this planet's tech tree will be assigned this planet in their shownPlanets. */
+    public boolean autoAssignPlanet = true;
+
     public Planet(String name, Planet parent, float radius){
         super(name);
 
@@ -332,6 +335,11 @@ public class Planet extends UnlockableContent{
     public void init(){
         if(techTree == null){
             techTree = TechTree.roots.find(n -> n.planet == this);
+        }
+
+        if(techTree != null && autoAssignPlanet){
+            techTree.addDatabaseTab(this);
+            techTree.addPlanet(this);
         }
 
         for(Sector sector : sectors){

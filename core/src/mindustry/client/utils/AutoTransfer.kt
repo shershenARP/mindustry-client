@@ -12,12 +12,17 @@ import mindustry.entities.bullet.*
 import mindustry.gen.*
 import mindustry.graphics.*
 import mindustry.type.*
+import mindustry.world.blocks.defense.ForceProjector
+import mindustry.world.blocks.defense.MendProjector
+import mindustry.world.blocks.defense.OverdriveProjector
 import mindustry.world.blocks.defense.turrets.*
 import mindustry.world.blocks.power.NuclearReactor.*
 import mindustry.world.blocks.production.*
 import mindustry.world.blocks.production.Drill.*
 import mindustry.world.blocks.production.GenericCrafter.*
 import mindustry.world.blocks.storage.*
+import mindustry.world.blocks.units.Reconstructor
+import mindustry.world.blocks.units.UnitFactory
 import mindustry.world.blocks.storage.Unloader.*
 import mindustry.world.consumers.*
 import kotlin.math.*
@@ -50,6 +55,14 @@ class AutoTransfer {
             drain = Core.settings.getBool("autotransfer-drain", false)
             drainToContainers = Core.settings.getBool("autotransfer-draintocontainers", false)
         }
+        @JvmStatic
+        fun setminres(x: Int) {
+            minCoreItems = x
+        }
+        @JvmStatic
+        fun setdelay(z: Float) {
+            delay = z
+        }
     }
 
     val builds = Seq<Building>(false) // Not ordered as we sort *after* mutation is finished.
@@ -81,6 +94,7 @@ class AutoTransfer {
         counts.fill(0) // reset needed item counters
         ammoCounts.fill(0)
         dpsCounts.fill(0f)
+
         if (!justTransferred && drain && drain()) return
         justTransferred = false
         transfer()
@@ -99,6 +113,13 @@ class AutoTransfer {
         buildTree.intersect(player.x - itemTransferRange, player.y - itemTransferRange, itemTransferRange * 2, itemTransferRange * 2, builds.clear()) // grab all buildings in range
 
         if (fromContainers && (core == null || !player.within(core, itemTransferRange))) core = containers.selectFrom(builds) { it.block is StorageBlock && (item == null || it.items.has(item)) }.min { it -> it.dst(player) }
+
+        builds.filter { it.block.findConsumer<Consume?> { it is ConsumeItems || it is ConsumeItemFilter || it is ConsumeItemDynamic } != null && player.within(it, itemTransferRange) }
+        builds.filter { it !is NuclearReactorBuild}
+        if(Core.settings.getBool("onlyYFAT")) builds.filter { it is Reconstructor.ReconstructorBuild || it is UnitFactory.UnitFactoryBuild }
+        if(Core.settings.getBool("noHeAT")) builds.filter { it !is MendProjector.MendBuild }
+        if(Core.settings.getBool("noOvAT")) builds.filter { it !is OverdriveProjector.OverdriveBuild }
+        if(Core.settings.getBool("noShAT")) builds.filter { it !is ForceProjector.ForceBuild }
 
         builds.retainAll { it.block.findConsumer<Consume?> { it is ConsumeItems || it is ConsumeItemFilter || it is ConsumeItemDynamic } != null && it !is NuclearReactorBuild && player.within(it, itemTransferRange) }
             .sort { b -> -b.acceptStack(player.unit().item(), player.unit().stack.amount, player.unit()).toFloat() }

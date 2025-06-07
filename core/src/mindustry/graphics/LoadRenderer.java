@@ -2,6 +2,7 @@ package mindustry.graphics;
 
 import arc.*;
 import arc.assets.*;
+import arc.files.Fi;
 import arc.func.*;
 import arc.fx.*;
 import arc.fx.filters.*;
@@ -23,7 +24,15 @@ import mindustry.graphics.g3d.*;
 import static arc.Core.*;
 
 public class LoadRenderer implements Disposable{
-    private static final Color color = new Color(Pal.accent).lerp(Color.black, 0.5f);
+    private static Color color = null;
+
+    static {
+        try {
+            color = new Color(Color.valueOf("505050")).lerp(Color.black, 0.5f);
+        } catch (Exception e) {
+            color =  new Color(Pal.accent).lerp(Color.black, 0.5f);
+        }
+    }
     private static final Color colorRed = Pal.breakInvalid.cpy().lerp(Color.black, 0.3f);
     private static final String red = "[#" + colorRed + "]";
     private static final String orange = "[#" + color + "]";

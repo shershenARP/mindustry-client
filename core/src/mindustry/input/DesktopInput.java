@@ -25,6 +25,7 @@ import mindustry.client.navigation.*;
 import mindustry.client.navigation.waypoints.*;
 import mindustry.client.ui.*;
 import mindustry.client.utils.*;
+import mindustry.content.UnitTypes;
 import mindustry.core.*;
 import mindustry.entities.*;
 import mindustry.entities.units.*;
@@ -125,6 +126,17 @@ public class DesktopInput extends InputHandler{
                         if(showingMassDrivers){
                             str.append("\n").append(bundle.format("client.togglemassdrivers", keybinds.get(Binding.show_massdriver_configs).key.toString()));
                         }
+                        //
+                        if(playersblockplanshow){
+                            str.append("\n").append(bundle.format("client.showplblplan", keybinds.get(Binding.block_show_plans).key.toString()));
+                        }
+                        if(playersdeathplanshow){
+                            str.append("\n").append(bundle.format("client.showdeathlplan", keybinds.get(Binding.death_show_plans).key.toString()));
+                        }
+                        if(playersdeathcontrolplanshow){
+                            str.append("\n").append(bundle.format("client.showdeathcontrollplan", keybinds.get(Binding.death_show_plans).key.toString()));
+                        }
+                        //
                         if(hidingBlocks){
                             str.append("\n").append(bundle.format("client.toggleblocks", keybinds.get(Binding.hide_blocks).key.toString()));
                         }
@@ -322,7 +334,14 @@ public class DesktopInput extends InputHandler{
         if(Core.input.keyTap(Binding.player_list) && (scene.getKeyboardFocus() == null || scene.getKeyboardFocus().isDescendantOf(ui.listfrag.content) || scene.getKeyboardFocus().isDescendantOf(ui.minimapfrag.elem))){
             ui.listfrag.toggle();
         }
-
+        if(Core.input.keyTap(Binding.screenshot) && (scene.getKeyboardFocus() == null || scene.getKeyboardFocus().isDescendantOf(ui.listfrag.content) || scene.getKeyboardFocus().isDescendantOf(ui.minimapfrag.elem))){
+            ui.listblockfrag.toggle();
+        }
+        //
+        if(Core.input.keyTap(Binding.show_minimap_markers) && ui.minimapfrag.shown()) {
+            Core.settings.put("show-minimap-markers", !Core.settings.getBool("show-minimap-markers"));
+        }
+        //
         conveyorPlaceNormal = input.keyDown(Binding.toggle_placement_modifiers);
 
         if(Navigation.state == NavigationState.RECORDING){
@@ -373,6 +392,17 @@ public class DesktopInput extends InputHandler{
 
         if(input.keyTap(Binding.stop_following_path) && scene.getKeyboardFocus() == null){
             Navigation.stopFollowing();
+        }
+
+        if(input.keyTap(Binding.block_show_plans) && scene.getKeyboardFocus() == null){
+            playersblockplanshow = !playersblockplanshow;
+        }
+        if(input.keyTap(Binding.death_show_plans) && scene.getKeyboardFocus() == null){
+            if (input.shift()) {
+                playersdeathcontrolplanshow = !playersdeathcontrolplanshow;
+            } else {
+                playersdeathplanshow = !playersdeathplanshow;
+            }
         }
 
         if(input.keyTap(Binding.auto_build) && scene.getKeyboardFocus() == null){
@@ -518,12 +548,32 @@ public class DesktopInput extends InputHandler{
             }
         }
 
+
         if(commandMode && input.keyTap(Binding.select_all_unit_factories) && !scene.hasField() && !scene.hasDialog()){
             selectedUnits.clear();
             commandBuildings.clear();
             for(var build : player.team().data().buildings){
                 if(build.block.commandable){
                     commandBuildings.add(build);
+                }
+            }
+        }
+
+        if(commandMode && input.keyTap(Binding.select_last_units) && !scene.hasField() && !scene.hasDialog()){
+            selectedUnits.clear();
+            commandBuildings.clear();
+            for(var unit : player.team().data().units){
+                if(unit.isCommandable() && unit.type == last_select_units_type){
+                    selectedUnits.add(unit);
+                }
+            }
+        }
+        if(commandMode && input.keyTap(Binding.select_combat_units) && !scene.hasField() && !scene.hasDialog()){
+            selectedUnits.clear();
+            commandBuildings.clear();
+            for(var unit : player.team().data().units){
+                if(unit.isCommandable()&&(unit.type != UnitTypes.mega)&&(unit.type != UnitTypes.poly)){
+                    selectedUnits.add(unit);
                 }
             }
         }
