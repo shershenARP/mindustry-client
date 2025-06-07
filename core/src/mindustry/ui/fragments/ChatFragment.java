@@ -417,21 +417,6 @@ public class ChatFragment extends Table{
                 String mes1 = message.charAt(0) + "0";
                 if (!mes1.equals("!0") && !mes1.equals("/0") && !Core.settings.getBool("supreme")){
                     message = "[" + Core.settings.getString("uchatcolor") + "]" + message;
-                } else if (Core.settings.getBool("supreme")) {
-                    String oldMessage = message;
-                    message = "[#4d082c]";
-                    int mid = (oldMessage.length() - 1) / 2;
-                    String insert = "[#622ccb]Ǿ[#9c27b0]";
-
-                    for (int i = 0; i < oldMessage.length(); i++) {
-                        if (i == mid) {
-                            message += oldMessage.charAt(i) + insert;
-                        } else if (Math.random() < 0.4) {
-                            message += "?";
-                        } else {
-                            message += oldMessage.charAt(i);
-                        }
-                    }
                 }
             }
         }
