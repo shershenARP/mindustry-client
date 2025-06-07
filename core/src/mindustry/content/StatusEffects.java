@@ -16,7 +16,9 @@ public class StatusEffects{
 
     public static void load(){
 
-        none = new StatusEffect("none");
+        none = new StatusEffect("none"){{
+            color = Color.valueOf("353535");
+        }};
 
         burning = new StatusEffect("burning"){{
             color = Color.valueOf("ffc455");
@@ -204,6 +206,7 @@ public class StatusEffects{
         }};
 
         invincible = new StatusEffect("invincible"){{
+            color = Pal.accent;
             healthMultiplier = Float.POSITIVE_INFINITY;
         }};
     }

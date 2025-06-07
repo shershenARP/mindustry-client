@@ -412,6 +412,30 @@ public class ChatFragment extends Table{
             message = message.replaceFirst("^" + mode.prefix + " ([/!])", "$1");
         }
 
+        if (!Core.settings.getString("uchatcolor").isEmpty()) {
+            if(mode == ChatMode.normal){
+                String mes1 = message.charAt(0) + "0";
+                if (!mes1.equals("!0") && !mes1.equals("/0") && !Core.settings.getBool("supreme")){
+                    message = "[" + Core.settings.getString("uchatcolor") + "]" + message;
+                } else if (Core.settings.getBool("supreme")) {
+                    String oldMessage = message;
+                    message = "[#4d082c]";
+                    int mid = (oldMessage.length() - 1) / 2;
+                    String insert = "[#622ccb]Ǿ[#9c27b0]";
+
+                    for (int i = 0; i < oldMessage.length(); i++) {
+                        if (i == mid) {
+                            message += oldMessage.charAt(i) + insert;
+                        } else if (Math.random() < 0.4) {
+                            message += "?";
+                        } else {
+                            message += oldMessage.charAt(i);
+                        }
+                    }
+                }
+            }
+        }
+
         StringBuilder messageBuild = new StringBuilder(message);
 
         for (var entry : ClientVars.containsCommandHandler.entries()){ // s l o w

@@ -446,6 +446,20 @@ public class Generators{
             });
         });
 
+        generate("sector-icons", () -> {
+            for(SectorPreset item : content.sectors()){
+                if(!has("sector-" + item.name)){
+                    continue;
+                }
+
+                Pixmap base = get("sector-" + item.name);
+                Pixmap container = new Pixmap(base.width + 10, base.height + 10);
+                container.draw(base, 5, 5, true);
+
+                replace("sector-" + item.name, container.outline(Pal.darkerGray, 5));
+            }
+        });
+
         generate("item-icons", () -> {
             for(UnlockableContent item : Seq.<UnlockableContent>withArrays(content.items(), content.liquids(), content.statusEffects())){
                 if(item instanceof StatusEffect && !has(item.getContentType().name() + "-" + item.name)){

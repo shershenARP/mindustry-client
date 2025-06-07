@@ -1,11 +1,14 @@
 package mindustry.ui;
 
 import arc.*;
+import arc.graphics.Color;
 import arc.graphics.g2d.*;
 import arc.input.*;
+import arc.math.geom.Vec2;
 import arc.scene.*;
 import arc.scene.event.*;
 import arc.scene.ui.layout.*;
+import mindustry.client.navigation.Markers;
 import mindustry.gen.*;
 
 import static mindustry.Vars.*;
@@ -40,6 +43,33 @@ public class Minimap extends Table{
                     Draw.alpha(parentAlpha);
                     renderer.minimap.drawEntities(x, y, width, height, 0.75f, false);
                 }
+
+                //с болью и костылями этот код был написан чатом гпт
+                if(Core.settings.getBool("show-minimap-markers", true)){
+                    for(Markers.Marker marker : Markers.INSTANCE){
+                        float worldX = marker.getUnitX();
+                        float worldY = marker.getUnitY();
+
+                        // Используем transform для преобразования мировых координат в координаты миникарты
+                        Vec2 pos = new Vec2(worldX, worldY);
+                        pos = renderer.minimap.transform(pos);
+
+                        float mapX = pos.x;
+                        float mapY = pos.y;
+
+                        // Проверяем, внутри ли миникарты
+                        if(mapX >= x && mapX <= x + width && mapY >= y && mapY <= y + height){
+                            Draw.color(Color.black);
+                            Fill.circle(mapX, mapY, 3f);
+                            Draw.color(marker.getColor());
+                            Fill.circle(mapX, mapY, 2f);
+                        }
+                    }
+                }
+
+
+
+                Draw.reset();
 
                 clipEnd();
             }

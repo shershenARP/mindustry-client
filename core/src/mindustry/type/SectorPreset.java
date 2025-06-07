@@ -1,6 +1,8 @@
 package mindustry.type;
 
+import arc.Core;
 import arc.func.*;
+import arc.util.Time;
 import mindustry.ctype.*;
 import mindustry.game.*;
 import mindustry.gen.*;
@@ -60,7 +62,8 @@ public class SectorPreset extends UnlockableContent{
     @Override
     public void loadIcon(){
         if(Icon.terrain != null){
-            uiIcon = fullIcon = Icon.terrain.getRegion();
+            uiIcon = fullIcon = Core.atlas.find("sector-" + name, Icon.terrain.getRegion());
+            Time.runTask(180, () -> uiIcon = fullIcon = Core.atlas.find("sector-" + name, Icon.terrain.getRegion()));
         }
     }
 

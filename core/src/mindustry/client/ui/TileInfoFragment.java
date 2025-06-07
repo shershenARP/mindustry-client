@@ -10,6 +10,7 @@ import mindustry.client.antigrief.*;
 import mindustry.core.*;
 import mindustry.gen.*;
 import mindustry.world.*;
+import mindustry.world.blocks.storage.CoreBlock;
 
 import java.util.concurrent.atomic.*;
 
@@ -21,7 +22,7 @@ public class TileInfoFragment extends Table {
         Image img = new Image();
         add(img).size(63).padRight(6);
         Label label = new Label("");
-        add(label).height(126);
+        add(label).height(56);
         visible(() -> Core.settings.getBool("tilehud"));
         AtomicInteger lastPos = new AtomicInteger();
         var builder = new StringBuilder();
@@ -44,6 +45,7 @@ public class TileInfoFragment extends Table {
             img.setDrawable(icon.found() ? icon : hovered.floor().uiIcon);
             var record = TileRecords.INSTANCE.get(hovered);
             if (record == null) return;
+            if (hovered.block() instanceof CoreBlock) return;
             var logs = record.lastLogs(7);
 
             builder.setLength(0);

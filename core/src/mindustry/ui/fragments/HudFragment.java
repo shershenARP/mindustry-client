@@ -120,9 +120,37 @@ public class HudFragment{
             t.visible(() -> shown && Core.settings.getBool(("minimap"))); // FINISHME: Only hide minimap when doing so, use a collapser to shrink it maybe? Idk
             t.name = "minimap/position";
             //tile hud
-            t.add(new TileInfoFragment()).name("tilehud").top();
-            //minimap
-            t.add(new Minimap()).name("minimap").top();
+            t.table(ta -> {
+                if(Core.settings.getBool("historyfragment")) {
+                    ta.add(new HistoryInfoFragment()).name("log").top().right();
+                }
+                else{
+                    if(Core.settings.getBool("tilefragment")) {
+                        ta.add(new TileInfoFragment()).name("tilehud").top();
+                    }
+                }
+                //minimap
+                ta.add(new Minimap()).name("minimap").top();
+            });
+            t.row();
+
+            t.table(tt->{
+                ImageButtonStyle sstyle = Styles.cleari;
+                tt.defaults().size(30f);
+                tt.button(Icon.refreshSmall, sstyle, () -> {
+                    Call.sendChatMessage("/sync");
+                }).name("sync").tooltip("/sync");
+
+                tt.button(Icon.powerSmall, sstyle, () -> {
+                    String message = "!fixpower c";
+                    CommandHandler.CommandResponse response = ClientVars.clientCommandHandler.handleMessage(message, player);
+                }).name("fixpower").tooltip("fixpower");
+
+                tt.button(Icon.unitsSmall, sstyle, () -> {
+                    String message = "!uc " + UnitTypes.mega.localizedName;
+                    ClientVars.clientCommandHandler.handleMessage(message, player);
+                }).name("mega").tooltip("mega");
+            }).right();
             t.row();
             //position
             t.label(() -> player.tileX() + ", " + player.tileY() + "\n" + "[coral]" + World.toTile(Core.input.mouseWorldX()) + ", " + World.toTile(Core.input.mouseWorldY()))
@@ -132,6 +160,11 @@ public class HudFragment{
                 .name("position").top().right().labelAlign(Align.right)
                 .colspan(2);
             t.top().right();
+
+            if(Core.settings.getBool("historyfragment")) {
+                t.row();
+                t.add(new TileInfoFragment()).name("tilehud").top().right();
+            }
         });
 
         ui.hints.build(parent);
