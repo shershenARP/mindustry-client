@@ -22,7 +22,7 @@ public class TileInfoFragment extends Table {
         Image img = new Image();
         add(img).size(63).padRight(6);
         Label label = new Label("");
-        add(label).height(56);
+        add(label).maxHeight(168); //56
         visible(() -> Core.settings.getBool("tilehud"));
         AtomicInteger lastPos = new AtomicInteger();
         var builder = new StringBuilder();

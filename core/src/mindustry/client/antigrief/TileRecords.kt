@@ -87,7 +87,6 @@ object TileRecords {
             addLogH(ConfigureTileLog(it.tile.tile, it.player.toInteractor(), it.tile.tile.block(), it.tile.rotation, it.value))
             addLogMinor(it.tile.tile, ConfigureTileLog(it.tile.tile, it.player.toInteractor(), it.tile.tile.block(), it.tile.rotation, it.value))
             it.tile.tile.getLinkedTiles { tile ->
-                addLogMinor(tile, ConfigureTileLog(tile, it.player.toInteractor(), tile.block(), it.tile.rotation, it.value))
                 addLog(tile, constructor(tile, it.player.toInteractor(), tile.block(), it.tile.rotation, it.value))
             }
         }

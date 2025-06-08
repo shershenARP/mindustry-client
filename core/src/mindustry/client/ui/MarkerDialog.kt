@@ -36,10 +36,20 @@ object MarkerDialog : BaseDialog("Markers") {
             table.width = pane.width
             table.image(marker.shape).left().pad(5f)//.width(20f)
 
+            /*
             table.stack(Image(Tex.alphaBg), Image(Tex.whiteui).apply {
                 update { setColor(marker.color) }
             }).size(50f).pad(5f).left().get().clicked {
                 ui.picker.show(marker.color) { color -> marker.color = color }
+            }
+            */
+
+            table.stack(Image(Tex.alphaBg), Image(Tex.whiteui).apply {
+                update { setColor(marker.color) }
+            }).size(50f).pad(5f).left().get().clicked {
+                ui.picker.show(marker.color) { color ->
+                    marker.color = Color(color) 
+                }
             }
 
             table.add(marker.name).left().pad(5f).growX().get().clicked {
