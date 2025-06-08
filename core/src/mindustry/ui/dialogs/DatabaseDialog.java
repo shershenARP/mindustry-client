@@ -101,7 +101,7 @@ public class DatabaseDialog extends BaseDialog{
             ContentType type = ContentType.all[j];
 
             Seq<UnlockableContent> array = allContent[j]
-                    .select(c -> c instanceof UnlockableContent u && (!u.isHidden() || (u instanceof StatusEffect) || (u instanceof UnitType)) && !u.hideDatabase && (tab == Planets.sun || u.allDatabaseTabs || u.databaseTabs.contains(tab)) &&
+                    .select(c -> c instanceof UnlockableContent u && (!u.isHidden() || (u instanceof StatusEffect) || (u instanceof UnitType)) && !u.hideDatabase && (tab == Planets.sun || u.allDatabaseTabs || u.databaseTabs.contains(tab) || (u instanceof StatusEffect && (tab == Planets.serpulo || tab == Planets.erekir))) &&
                             (text.isEmpty() || u.localizedName.toLowerCase().contains(text))).as();
 
             if(array.size == 0) continue;

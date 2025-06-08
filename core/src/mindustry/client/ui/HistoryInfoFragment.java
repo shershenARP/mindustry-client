@@ -18,6 +18,7 @@ import mindustry.graphics.Pal;
 import mindustry.ui.dialogs.BaseDialog;
 import mindustry.world.Tile;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -28,8 +29,8 @@ public class HistoryInfoFragment extends Table{
     private static Table reslog = new Table();
     public HistoryInfoFragment() {
         setBackground(Tex.buttonEdge5);
-        Image img = new Image();
-        add(img);
+        //Image img = new Image();
+        //add(img);
         Label label = new Label("");
         add(label).height(126);
         visible(() -> Core.settings.getBool("tilehud"));
@@ -104,7 +105,7 @@ public class HistoryInfoFragment extends Table{
                 scroll.setScrollingDisabled(false, false);
                 scroll.setFadeScrollBars(true);
 
-                searchField.setMessageText("Поиск...");
+                searchField.setMessageText("@players.search");
 
                 // Фильтр ввода только цифр для pageInput
                 pageInput.setText("");
@@ -128,14 +129,15 @@ public class HistoryInfoFragment extends Table{
                         }
                     }
 
+                    Collections.reverse(filtered);
+
                     totalPages = Math.max(1, (int)Math.ceil(filtered.size() / (float) pageSize));
                     currentPage = Math.max(0, Math.min(currentPage, totalPages - 1));
 
                     int start = currentPage * pageSize;
                     int end = Math.min(filtered.size(), start + pageSize);
 
-                    for (int i = end - 1; i >= start; i--) {
-                        // content.add(formatLog(filtered.get(i))).left().growX().wrap();
+                    for (int i = start; i < end; i++) {
                         content.add(filtered.get(i)).left().growX().wrap();
                         content.row();
                     }

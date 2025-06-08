@@ -1107,7 +1107,7 @@ public class HudFragment{
                 if(applied != null){
                     for(StatusEffect effect : content.statusEffects()){
                         if(applied.get(effect.id) && !effect.isHidden()){
-                            t.image(effect.uiIcon).size(iconMed).get()
+                            t.image(effect.uiIcon).get()
                             .addListener(new Tooltip(l -> l.label(() ->
                                 effect.localizedName + " [lightgray]" + UI.formatTime(player.unit().getDuration(effect))).style(Styles.outlineLabel)));
                         }
@@ -1116,7 +1116,7 @@ public class HudFragment{
                     statuses.set(applied);
                 }
             }
-        }).growX();
+        }).growX().maxWidth(dsize * 5 - 24);
     }
 
     private boolean canSkipWave(){

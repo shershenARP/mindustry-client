@@ -75,54 +75,56 @@ public class MenuFragment{
         }}, ui.discord::show).marginTop(9f).marginLeft(10f).tooltip("@discord").size(84, 45).name("discord"));
 
         parent.fill(t -> {
-            Image img = new Image(Core.atlas.find(chan[0]));
-            Image dangerIcon = new Image(Core.atlas.find(chan[0] + "-danger"));
-            dangerIcon.visible = false;
-            dangerIcon.touchable = Touchable.disabled;
+            if (Core.settings.getBool("chanshow")) {
+                Image img = new Image(Core.atlas.find(chan[0]));
+                Image dangerIcon = new Image(Core.atlas.find(chan[0] + "-danger"));
+                dangerIcon.visible = false;
+                dangerIcon.touchable = Touchable.disabled;
 
-            Core.scene.add(img);
-            Core.scene.add(dangerIcon);
+                Core.scene.add(img);
+                Core.scene.add(dangerIcon);
 
-            Events.run(Trigger.update, () -> {
-                String newChan = Core.settings.getString("chan", "alpha-chan");
-                if (!newChan.equals(chan[0])) {
-                    chan[0] = newChan;
-                    img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0])));
-                    dangerIcon.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-danger")));
-                    TextureRegion newRegion = Core.atlas.find(chan[0] + "-danger");
+                Events.run(Trigger.update, () -> {
+                    String newChan = Core.settings.getString("chan", "alpha-chan");
+                    if (!newChan.equals(chan[0])) {
+                        chan[0] = newChan;
+                        img.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0])));
+                        dangerIcon.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-danger")));
+                        TextureRegion newRegion = Core.atlas.find(chan[0] + "-danger");
+
+                        if (Core.settings.getString("chan").equals("oct-chan")) {
+                            if (dangerIcon.getImageWidth() != 76 || dangerIcon.getImageHeight() != 76) {
+                                dangerIcon.setSize(76);
+                            }
+                        } else if (dangerIcon.getImageWidth() != 40 || dangerIcon.getImageHeight() != 48) {
+                            dangerIcon.setSize(40, 48);
+                        }
+                    }
 
                     if (Core.settings.getString("chan").equals("oct-chan")) {
-                        if (dangerIcon.getImageWidth() != 76 || dangerIcon.getImageHeight() != 76) {
-                            dangerIcon.setSize(76);
-                        }
-                    } else if (dangerIcon.getImageWidth() != 40 || dangerIcon.getImageHeight() != 48) {
-                        dangerIcon.setSize(40, 48);
+                        dangerIcon.setPosition(img.x - 15f, img.y - 6f);
+                    } else {
+                        dangerIcon.setPosition(img.x, img.y);
+
                     }
-                }
+                });
 
-                if (Core.settings.getString("chan").equals("oct-chan")) {
-                    dangerIcon.setPosition(img.x - 15f, img.y - 6f);
-                } else {
-                    dangerIcon.setPosition(img.x, img.y);
+                Events.on(TeamCoreDamage.class, e -> {
+                    dangerIcon.visible = true;
+                    dangerIcon.toFront();
+                });
 
-                }
-            });
+                Timer.schedule(() -> dangerIcon.visible = false, 3f, 3f, -1);
 
-            Events.on(TeamCoreDamage.class, e -> {
-                dangerIcon.visible = true;
-                dangerIcon.toFront();
-            });
+                Tooltip tooltip = new Tooltip(tt -> {
+                    tt.background(Styles.black6);
+                    tt.add("So cute.").style(Styles.outlineLabel);
+                });
 
-            Timer.schedule(() -> dangerIcon.visible = false, 3f, 3f, -1);
+                addInteractionLogic(img, dangerIcon, tooltip, chan);
 
-            Tooltip tooltip = new Tooltip(tt -> {
-                tt.background(Styles.black6);
-                tt.add("So cute.").style(Styles.outlineLabel);
-            });
-
-            addInteractionLogic(img, dangerIcon, tooltip, chan);
-
-            img.addListener(new HandCursorListener());
+                img.addListener(new HandCursorListener());
+            };
         });
 
 
@@ -135,19 +137,6 @@ public class MenuFragment{
             }}, ui.about::show).size(84, 45).name("info"));
         }else{
             parent.fill(c -> {
-                c.button("", Icon.refresh, () -> {
-                    Core.settings.put("updateurl", (Core.settings.getString("updateurl") + "-v7-builds").replaceFirst("((-v6|-v7)?-builds) {2}", ""));
-                    ui.loadfrag.show();
-                    becontrol.checkUpdate(result -> {
-                        ui.loadfrag.hide();
-                        if(!result){
-                            ui.showInfo("@be.noupdates");
-                        } else {
-                            becontrol.showUpdateDialog();
-                        }
-                    });
-                }).size(200, 60).padRight(10).update(t -> t.getLabel().setText(Core.settings.getString("updateurl").endsWith("-builds") ? "@client.switchstable" : "@client.switchunstable")).disabled(true); // FINISHME: Re-enable when v7 releases
-
                 c.bottom().right().button("@be.check", Icon.refresh, () -> {
                     ui.loadfrag.show();
                     becontrol.checkUpdate(result -> {
