@@ -95,7 +95,7 @@ public class MinimapFragment{
                     Font font = Fonts.outline;
                     font.getData().setScale(1f / Scl.scl(1f)); //масштабируем под экран
 
-                    font.draw(marker.getName(), mapX + 14, mapY + 10);
+                    font.draw("[white]" + marker.getName(), mapX + 14, mapY + 10);
                 }
             }
             Draw.reset();
