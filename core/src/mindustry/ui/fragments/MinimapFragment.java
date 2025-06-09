@@ -8,6 +8,7 @@ import arc.math.*;
 import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.event.*;
+import arc.scene.style.TextureRegionDrawable;
 import arc.scene.ui.layout.*;
 import arc.util.*;
 import mindustry.client.navigation.Markers;
@@ -61,6 +62,7 @@ public class MinimapFragment{
                     float mapX = bounds.x + bounds.width * nx;
                     float mapY = bounds.y + bounds.height * ny;
 
+                    TextureRegion shape = marker.getShape().getRegion();
                     /*
                     float outlineThickness = 2f;
 
@@ -81,9 +83,9 @@ public class MinimapFragment{
                     //нафиг это короче, занесу в экспериментал. А так круги пока что
 
                     if (Core.settings.getBool("expmarkers")) {
-                        Fill.circle(mapX, mapY, 12);
+                        Fill.circle(mapX, mapY, shape.height * 0.7f * 0.7f);
                         Draw.color(marker.getColor());
-                        Draw.rect(marker.getShape().getRegion(), mapX, mapY, 15, 15);
+                        Draw.rect(shape, mapX, mapY, shape.width * 0.6f, shape.height * 0.6f);
                     } else {
                         Fill.circle(mapX, mapY, 8);
                         Draw.color(marker.getColor());
@@ -95,7 +97,7 @@ public class MinimapFragment{
                     Font font = Fonts.outline;
                     font.getData().setScale(1f / Scl.scl(1f)); //масштабируем под экран
 
-                    font.draw("[white]" + marker.getName(), mapX + 14, mapY + 10);
+                    font.draw("[white]" + marker.getName(), mapX + shape.width * 0.65f, mapY + shape.height * 0.4f); //14, 10
                 }
             }
             Draw.reset();
