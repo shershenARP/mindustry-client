@@ -61,8 +61,10 @@ public class Minimap extends Table{
                         if(mapX >= x && mapX <= x + width && mapY >= y && mapY <= y + height){
                             Draw.color(Color.black);
                             Fill.circle(mapX, mapY, 3f);
+                            //Draw.rect(marker.getShape().getRegion(), mapX, mapY, 60f, 60f);
                             Draw.color(marker.getColor());
                             Fill.circle(mapX, mapY, 2f);
+                            //Draw.rect(marker.getShape().getRegion(), mapX, mapY, 50f, 50f);
                         }
                     }
                 }

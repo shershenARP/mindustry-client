@@ -847,7 +847,7 @@ public class DesktopInput extends InputHandler{
 
     @Override
     public void buildPlacementUI(Table table){
-        table.image().color(Pal.gray).height(4f).colspan(4).growX();
+        table.image().color(Pal.gray).height(4f).colspan(8).growX(); //4
         table.row();
         table.left().margin(0f).defaults().size(48f).left();
 
@@ -858,6 +858,10 @@ public class DesktopInput extends InputHandler{
         table.button(Icon.book, Styles.clearNonei, () -> {
             ui.database.show();
         }).tooltip("@database");
+
+        table.button(Icon.units, Styles.clearNonei, () -> {
+            ui.trashbase.show();
+        }).tooltip("@trashbase");
 
         table.button(Icon.map, Styles.clearNonei, () -> {
             if (state.isCampaign() && !Vars.net.client()) ui.planet.show();

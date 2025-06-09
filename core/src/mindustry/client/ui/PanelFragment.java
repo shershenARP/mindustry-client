@@ -56,6 +56,7 @@ public class PanelFragment extends InputHandler{
     private boolean eneblemining = false;
     private boolean playerbuild = false;
     private boolean viewunitshealth = false;
+    private boolean showunitseffects = false;
     private boolean viewprogressunit = false;
     private boolean viewprogresbuild  = false;
 
@@ -70,7 +71,11 @@ public class PanelFragment extends InputHandler{
             draw2();
             draw3();
             draw4();
-            //draw5();
+            draw5();
+            viewunitshealth=Core.settings.getBool("viewunitshealth");
+            showunitseffects=Core.settings.getBool("showunitseffects");
+            viewprogressunit=Core.settings.getBool("viewprogressunit");
+            viewprogresbuild=Core.settings.getBool("viewprogresbuild");
         });
 
 
@@ -103,6 +108,10 @@ public class PanelFragment extends InputHandler{
                     if(player.unit().plans.size != 0 && control.input.isBuilding ) {prevfollowmode = 3; currentfollowmode = 3; Navigation.follow(new BuildPath("self")); } else return;
                 }
             }
+        });
+        Events.on(ClientLoadEvent.class, e -> {
+            if (Core.settings.getBool("ExtendedUI-auto-fill"))
+                AutoFillExtendedUI.init();
         });
     }
 
@@ -227,8 +236,8 @@ public class PanelFragment extends InputHandler{
         Draw.reset();
     }
     private void draw5() { //draw units effects
+        if (!showunitseffects) return;
         brokenFade = Mathf.lerpDelta(brokenFade, 1f, 0.1f);
-        //if (!showunitseffects) return;
         for(Unit stateunit : Groups.unit){
             Bits statuses = new Bits();
             Bits applied = stateunit.statusBits();
@@ -342,6 +351,10 @@ public class PanelFragment extends InputHandler{
                     //Navigation.currentlyFollowing;
                 }).name("healer").tooltip("Heal");
 
+                t.button(Icon.distributionSmall, sstyle, () -> {
+                    currentfollowmode = 2;
+                    Navigation.follow(new BuildPath("self"));
+                }).name("builder").tooltip("Self builder");
 
                 t.button(Icon.terminalSmall, sstyle, () -> {
                     eneblemining = !eneblemining;
@@ -354,6 +367,10 @@ public class PanelFragment extends InputHandler{
                 t.button(Icon.planetSmall, sstylet, () -> {
                     Core.settings.put("viewunitshealth", !Core.settings.getBool("viewunitshealth"));
                 }).update(i -> i.setChecked(Core.settings.getBool("viewunitshealth"))).name("viewunitshealth").tooltip("Units health bar");
+
+                t.button(Icon.effectSmall, sstylet, () -> {
+                    Core.settings.put("showunitseffects", !Core.settings.getBool("showunitseffects"));
+                }).update(i -> i.setChecked(Core.settings.getBool("showunitseffects"))).name("showunitseffects").tooltip("Units effects");
 
                 t.button(Icon.unitsSmall, sstylet, () -> {
                     Core.settings.put("viewprogressunit", !Core.settings.getBool("viewprogressunit"));
@@ -397,9 +414,10 @@ public class PanelFragment extends InputHandler{
                     new Toast(1).add(bundle.get("setting.autotarget.name") + ": " + bundle.get((settings.getBool("autotarget") ? "mod.enabled" : "mod.disabled")));
                 }).update(i -> i.setChecked(Core.settings.getBool("autotarget"))).name("autotarget").tooltip("autotarget");
 
-                t.button(Icon.cancelSmall, sstylet, () -> {
+                /*t.button(Icon.cancelSmall, sstylet, () -> {
                     Core.settings.put("ignoreunit", !Core.settings.getBool("ignoreunit"));
-                }).update(i -> i.setChecked(Core.settings.getBool("ignoreunit"))).name("ignoreunit").tooltip("ignoreunit");
+                }).update(i -> i.setChecked(Core.settings.getBool("ignoreunit"))).name("ignoreunit").tooltip("ignoreunit");*/
+                t.button(Icon.eyeSmall, sstyle, this::checkworldprocc).tooltip("Eye of Sauron: World Processor");
 
                 //t.row();
                 t.button(Icon.craftingSmall, sstylet, () -> {
@@ -411,8 +429,7 @@ public class PanelFragment extends InputHandler{
                 t.button(Icon.filtersSmall, sstylet, () -> {
                     Core.settings.put("ExtendedUI-auto-fill", !Core.settings.getBool("ExtendedUI-auto-fill"));
                     AutoFillExtendedUI.init();
-                    Core.settings.put("autofill", !Core.settings.getBool("autofill"));
-                }).update(i -> i.setChecked(Core.settings.getBool("autofill"))).name("autofill").tooltip("autofill Extended UI");
+                }).update(i -> i.setChecked(Core.settings.getBool("ExtendedUI-auto-fill"))).name("ExtendedUI-auto-fill").tooltip("autofill Extended UI");
 
                 t.row();
 
@@ -427,6 +444,10 @@ public class PanelFragment extends InputHandler{
                 t.button(Icon.commandRallySmall, sstylet, () -> {
                     Core.settings.put("deserter", !Core.settings.getBool("deserter"));
                 }).update(i -> i.setChecked(Core.settings.getBool("deserter"))).name("deserter").tooltip("Deserter");
+
+                t.button(Icon.eyeOffSmall, sstyle, () -> {
+                    Vars.enableLight = !Vars.enableLight;
+                }).name("light").tooltip("light");
 
                 if(settings.getBool("canioffrender")) {
                     t.button(Icon.wrenchSmall, sstylet, () -> {

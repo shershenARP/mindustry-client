@@ -61,16 +61,41 @@ public class MinimapFragment{
                     float mapX = bounds.x + bounds.width * nx;
                     float mapY = bounds.y + bounds.height * ny;
 
+                    /*
+                    float outlineThickness = 2f;
+
                     Draw.color(Color.black);
-                    Fill.circle(mapX, mapY, 8);
-                    Draw.color(marker.getColor());
-                    Fill.circle(mapX, mapY, 5);
+                    for(int dx = -1; dx <= 1; dx++){
+                        for(int dy = -1; dy <= 1; dy++){
+                            if(dx != 0 || dy != 0){
+                                Draw.rect(marker.getShape().getRegion(), mapX + dx * outlineThickness, mapY + dy * outlineThickness, 25f, 25f);
+                            }
+                        }
+                    }
+                     */
+                    Draw.color(Color.black);
+                    //Fill.circle(mapX, mapY, 8);
+                    //Draw.rect(marker.getShape().getRegion(), mapX, mapY, 20f, 20f);
+                    //Draw.rect(marker.getShape().getRegion(), mapX, mapY, 10f, 10f);
+                    //Fill.rect(mapX - 2, mapY - 2, 21, 21);
+                    //нафиг это короче, занесу в экспериментал. А так круги пока что
+
+                    if (Core.settings.getBool("expmarkers")) {
+                        Fill.circle(mapX, mapY, 12);
+                        Draw.color(marker.getColor());
+                        Draw.rect(marker.getShape().getRegion(), mapX, mapY, 15, 15);
+                    } else {
+                        Fill.circle(mapX, mapY, 8);
+                        Draw.color(marker.getColor());
+                        Fill.circle(mapX, mapY, 5);
+                    };
 
                     Draw.color(Color.white);
 
                     Font font = Fonts.outline;
                     font.getData().setScale(1f / Scl.scl(1f)); //масштабируем под экран
-                    font.draw("[white]" + marker.getName(), mapX + 12, mapY + 10);
+
+                    font.draw(marker.getName(), mapX + 14, mapY + 10);
                 }
             }
             Draw.reset();

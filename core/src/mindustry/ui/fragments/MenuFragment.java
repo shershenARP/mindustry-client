@@ -92,7 +92,7 @@ public class MenuFragment{
                         dangerIcon.setDrawable(new TextureRegionDrawable(Core.atlas.find(chan[0] + "-danger")));
                         TextureRegion newRegion = Core.atlas.find(chan[0] + "-danger");
 
-                        if (Core.settings.getString("chan").equals("oct-chan")) {
+                        if (Core.settings.getString("chan", "alpha-chan").equals("oct-chan")) {
                             if (dangerIcon.getImageWidth() != 76 || dangerIcon.getImageHeight() != 76) {
                                 dangerIcon.setSize(76);
                             }
@@ -101,11 +101,10 @@ public class MenuFragment{
                         }
                     }
 
-                    if (Core.settings.getString("chan").equals("oct-chan")) {
+                    if (Core.settings.getString("chan", "alpha-chan").equals("oct-chan")) {
                         dangerIcon.setPosition(img.x - 15f, img.y - 6f);
                     } else {
                         dangerIcon.setPosition(img.x, img.y);
-
                     }
                 });
 
