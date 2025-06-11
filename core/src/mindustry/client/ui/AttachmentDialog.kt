@@ -8,16 +8,10 @@ import arc.scene.event.InputListener
 import arc.scene.ui.*
 import arc.struct.*
 import arc.util.Log
-import arc.util.ScreenUtils
 import arc.util.Time
-import arc.util.Timer
-import mindustry.FFF.TTP.textureToPixmap
 import mindustry.Vars
 import mindustry.client.utils.*
-import mindustry.core.Platform
 import mindustry.ui.dialogs.*
-import mindustry.ui.fragments.ChatFragment
-import java.util.*
 
 class AttachmentDialog(message: String, attachments: Seq<Texture>) : BaseDialog("@client.attachments") {
     init {
