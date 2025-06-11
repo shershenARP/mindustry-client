@@ -10,6 +10,7 @@ import arc.scene.ui.layout.*
 import arc.util.*
 import arc.util.serialization.Base64Coder
 import mindustry.FFF.B64
+import mindustry.Vars
 import mindustry.Vars.*
 import mindustry.client.navigation.*
 import mindustry.client.utils.*

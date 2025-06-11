@@ -31,7 +31,7 @@ public class HistoryInfoFragment extends Table{
         setBackground(Tex.buttonEdge5);
         //Image img = new Image();
         //add(img);
-        Label label = new Label("");
+        Label label = new Label(Core.settings.getString("startlogs", ""));
         add(label).height(126);
         visible(() -> Core.settings.getBool("tilehud"));
 
@@ -64,7 +64,7 @@ public class HistoryInfoFragment extends Table{
             for (var item : record) {
                 builder.append(item).append("\n");
             }
-            label.setText(builder.length() == 0 ? "" : builder.substring(0, builder.length() - 1));
+            label.setText(builder.length() == 0 ? Core.settings.getString("startlogs", "") : builder.substring(0, builder.length() - 1));
         });
 
         label.clicked(() -> {

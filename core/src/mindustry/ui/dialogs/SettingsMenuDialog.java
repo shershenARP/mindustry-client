@@ -530,6 +530,7 @@ public class SettingsMenuDialog extends BaseDialog{
         client.checkPref("fdpanelenable", true);
         client.checkPref("customtab", true);
         client.checkPref("chanshow", true);
+        client.textPref("startlogs", "");
         client.textPref("logcolorbuilt", "#41e89a");
         client.textPref("logcolorbroke", "#f25c5c");
         client.textPref("logcolorconfigured", "#7457ce");
