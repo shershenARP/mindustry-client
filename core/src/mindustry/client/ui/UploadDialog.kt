@@ -14,7 +14,6 @@ import mindustry.game.*
 import mindustry.gen.*
 import mindustry.ui.*
 import mindustry.ui.dialogs.*
-import mindustry.ui.fragments.ChatFragment
 
 object UploadDialog : BaseDialog("@client.uploadtitle") { // FINISHME: Somehow somewhere one of the pixmaps made here is still not disposed of correctly... I can't be bothered to fix it honestly
     private val images = mutableListOf<Pixmap>()
@@ -27,7 +26,6 @@ object UploadDialog : BaseDialog("@client.uploadtitle") { // FINISHME: Somehow s
             Vars.platform.showMultiFileChooser({
                 try {
                     addImage(Pixmap(it))
-                    ChatFragment.filesUpload.add(it);
                 } catch (e: Exception) {
                     Vars.ui.showInfoToast(Core.bundle["client.failedtoloadimage"], 3f)
                     Log.err("Error loading image", e)
@@ -71,7 +69,6 @@ object UploadDialog : BaseDialog("@client.uploadtitle") { // FINISHME: Somehow s
 
         Events.on(EventType.WorldLoadEvent::class.java) {
             clearImages()
-            ChatFragment.filesUpload.clear()
         }
     }
 
@@ -93,7 +90,7 @@ object UploadDialog : BaseDialog("@client.uploadtitle") { // FINISHME: Somehow s
         textures.forEach(Texture::dispose)
         textures.clear()
         cont.pane { pane ->
-            images.forEachIndexed { i, pix ->
+            images.forEach { pix ->
                 val tex = Texture(pix)
                 textures.add(tex)
                 pane.stack(
@@ -102,7 +99,6 @@ object UploadDialog : BaseDialog("@client.uploadtitle") { // FINISHME: Somehow s
                         t.button(Icon.cancel.tint(Color.red), Styles.emptyi) {
                             pix.dispose()
                             images.remove(pix)
-                            ChatFragment.filesUpload.remove(i)
                             updateImages()
                         }.expand().top().left().pad(10f)
                     }

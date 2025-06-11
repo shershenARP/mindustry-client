@@ -11,7 +11,6 @@ import arc.struct.*
 import arc.util.Log
 import arc.util.ScreenUtils
 import arc.util.Time
-import mindustry.FFF.TTP.textureToPixmap
 import mindustry.Vars
 import mindustry.client.utils.*
 import mindustry.core.Platform
