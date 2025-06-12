@@ -355,6 +355,17 @@ public class ChatFragment extends Table{
                     new AttachmentDialog(msg.unformatted, msg.attachments);
                 }
             }
+            if (Core.input.keyDown(Binding.show_copy_message)) {
+                Draw.color();
+                if (!shown) Draw.alpha(Mathf.clamp(fadetime - i, 0, 1) * opacity);
+                float x = offsetx; // + textWidth - layout.height
+                float y = offsety + theight - layout.height;
+//                Icon.copySmall.draw(x, y, layout.height, layout.height);
+                Tmp.r3.set(x, y, layout.width, layout.height);
+                if (Tmp.r3.contains(input.mouse())) {
+                    Core.app.setClipboardText(msg.unformatted);
+                }
+            }
         }
 
 
