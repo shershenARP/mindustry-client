@@ -20,8 +20,9 @@ class AttachmentDialog(message: String, attachments: Seq<Texture>) : BaseDialog(
         cont.row()
         cont.pane { pane ->
             attachments.forEachIndexed { i, it ->
-                pane.row(Image(it))
-                pane.addListener(object : InputListener() {
+                var image = Image(it)
+                pane.row(image)
+                image.addListener(object : InputListener() {
                     override fun touchDown(
                         event: InputEvent?,
                         x: Float,
@@ -35,17 +36,19 @@ class AttachmentDialog(message: String, attachments: Seq<Texture>) : BaseDialog(
                         //val pixmap = textureToPixmap(it);
                         ////var file = Fi.get("image.png");
                         //var writer = Platform.FileWriter{}
+                        if (button == KeyCode.mouseRight) {
+                            Vars.platform.showFileChooser(false, "png") { file: Fi ->
+                                try {
+                                    //PixmapIO.writePng(file, pixmap)
+                                    var screen = ScreenDialog(it)
+                                    screen.show()
+                                    var screenshot: Pixmap? = null
+                                    Time.runTask(
+                                        140f,
+                                        { screenshot = screen.getScreenshot();PixmapIO.writePng(file, screenshot) })
+                                    Time.runTask(160f, screen::hide)
 
-                        Vars.platform.showFileChooser(false, "png") { file: Fi ->
-                            try {
-                                //PixmapIO.writePng(file, pixmap)
-                                var screen = ScreenDialog(it)
-                                screen.show()
-                                var screenshot: Pixmap? = null
-                                Time.runTask(140f, {screenshot = screen.getScreenshot();PixmapIO.writePng(file, screenshot)})
-                                Time.runTask(160f, screen::hide)
-
-                                /*
+                                    /*
                                 Timer.schedule(object : TimerTask() {
                                     override fun run() {
 
@@ -56,11 +59,12 @@ class AttachmentDialog(message: String, attachments: Seq<Texture>) : BaseDialog(
                                  */
 
 
-                                //PixmapIO.writePng(file, pixmap)
-                                //pixmap.dispose()
-                            } catch (e: Throwable) {
-                                Vars.ui.showException(e)
-                                Log.err(e)
+                                    //PixmapIO.writePng(file, pixmap)
+                                    //pixmap.dispose()
+                                } catch (e: Throwable) {
+                                    Vars.ui.showException(e)
+                                    Log.err(e)
+                                }
                             }
                         }
                         //pixmap.dispose()

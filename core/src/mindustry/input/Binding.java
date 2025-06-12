@@ -11,10 +11,6 @@ public enum Binding implements KeyBind{
     mouse_move(KeyCode.mouseBack),
     pan(KeyCode.mouseForward),
 
-    //
-    show_minimap_markers(KeyCode.del),
-    //
-
     boost(KeyCode.shiftLeft),
     command_mode(KeyCode.shiftLeft),
     control(KeyCode.controlLeft),
@@ -69,6 +65,9 @@ public enum Binding implements KeyBind{
     fullscreen(KeyCode.f11),
     pause(KeyCode.space),
     minimap(KeyCode.m),
+    //
+    show_minimap_markers(KeyCode.del),
+    //
     research(KeyCode.j),
     planet_map(KeyCode.n),
     block_info(KeyCode.f1),
@@ -78,6 +77,9 @@ public enum Binding implements KeyBind{
     toggle_block_status(KeyCode.f6),
     player_list(KeyCode.tab, "multiplayer"),
     chat(KeyCode.enter),
+    //
+    show_copy_message(KeyCode.controlLeft),
+    //
     chat_history_prev(KeyCode.up),
     chat_history_next(KeyCode.down),
     chat_scroll(new Axis(KeyCode.scroll)),
