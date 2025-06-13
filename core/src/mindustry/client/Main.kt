@@ -156,6 +156,15 @@ object Main : ApplicationListener {
                 is SchematicTransmission -> {
                     transmission.addToChat()
                 }
+
+                is MarkerTransmission -> {
+                    //короче, там смотришь в нью консоле, страничку назад, как отправлять эту штуку. Разрабы фуса сделали удобно, не пришлось мозги себе делать.
+                    //про MarkerTrasmission не забудь
+                    //там ещё MarkerDialog подправь, все дела
+                    //вообще, круто они придумали, этот их Base32768Coder. Я сначало даже и не понял
+//                    Vars.ui.showInfo(transmission.getDecoded())
+                    transmission.addToChat()
+                }
             }
         }
     }

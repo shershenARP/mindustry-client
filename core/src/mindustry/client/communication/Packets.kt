@@ -2,6 +2,7 @@ package mindustry.client.communication
 
 import arc.util.*
 import mindustry.client.communication.syncing.Syncer.*
+import mindustry.client.navigation.Markers
 import mindustry.client.utils.*
 import java.nio.*
 import java.time.*
@@ -27,7 +28,8 @@ object Packets {
         RegisteredTransmission(ClientMessageTransmission::class, ::ClientMessageTransmission),
         RegisteredTransmission(ImageTransmission::class, ::ImageTransmission),
         RegisteredTransmission(SyncerTransmission::class, ::SyncerTransmission),
-        RegisteredTransmission(SchematicTransmission::class, ::SchematicTransmission)
+        RegisteredTransmission(SchematicTransmission::class, ::SchematicTransmission),
+        RegisteredTransmission(MarkerTransmission::class) { b, id, sid -> MarkerTransmission(b, id, sid) }
     )
 
     private data class RegisteredTransmission<T : Transmission>(val type: KClass<T>, val constructor: (content: ByteArray, id: Long, senderID: Int) -> T)
