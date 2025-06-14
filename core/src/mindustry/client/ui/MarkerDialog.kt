@@ -119,7 +119,7 @@ object MarkerDialog : BaseDialog("Markers") {
         init {
             val nameField = TextField("")
             nameField.messageText = "Name"
-            cont.row(nameField)
+            cont.row(nameField).maxTextLength(32)
 
             val xField = cont.field("") {}.valid(Strings::canParsePositiveInt).growX().get()
             xField.messageText = "X"
