@@ -754,7 +754,7 @@ fun setupCommands() {
     //FINISHME: add various % for gamerules
 
     // Experimentals (and funny commands)
-    if (Core.settings.getBool("client-experimentals") || OS.hasProp("policone")) {
+    if (Core.settings.getBool("client-experimentals", true) || OS.hasProp("policone")) {
         register("poli", "Spelling is hard. This will make sure you never forget how to spell the plural of poly, you're welcome.") { _, _ ->
             sendMessage("Unlike a roly-poly whose plural is roly-polies, the plural form of poly is polys. Please remember this, thanks! :)")
         }

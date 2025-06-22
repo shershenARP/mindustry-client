@@ -209,7 +209,7 @@ class MarkerTransmission : Transmission {
             row.add(iconImage).left().pad(5f).get().clicked {
                 val dialog = IconPickerDialog("Select Icon") { icon ->
                     marker.shape = TextureRegionDrawable(icon)
-                    iconImage.setDrawable(marker.shape) // обновляем вручную
+                    iconImage.setDrawable(marker.shape)
                 }
                 dialog.show()
             }

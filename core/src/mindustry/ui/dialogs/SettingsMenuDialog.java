@@ -462,7 +462,7 @@ public class SettingsMenuDialog extends BaseDialog{
         client.checkPref("schematicbrowserimporttags", true);
         client.checkPref("schematicuicarryover", true);
 
-        if (settings.getBool("client-experimentals") || OS.hasProp("policone")) {
+        if (settings.getBool("client-experimentals", true) || OS.hasProp("policone")) {
             client.category("experimental");
             client.checkPref("trackcoreitems", false, i -> CoreItemsDisplay.trackItems = i && !net.server());
             client.checkPref("modiconloadingoptimization", false);
@@ -530,6 +530,7 @@ public class SettingsMenuDialog extends BaseDialog{
         client.checkPref("fdpanelenable", true);
         client.checkPref("customtab", true);
         client.checkPref("chanshow", true);
+        client.checkPref("icompletelytrustotherclients", false);
         client.textPref("startlogs", "");
         client.textPref("logcolorbuilt", "#41e89a");
         client.textPref("logcolorbroke", "#f25c5c");

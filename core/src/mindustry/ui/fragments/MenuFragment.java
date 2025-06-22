@@ -135,6 +135,7 @@ public class MenuFragment{
                 up = infoBanner;
             }}, ui.about::show).size(84, 45).name("info"));
         }else{
+            /*
             parent.fill(c -> {
                 c.bottom().right().button("@be.check", Icon.refresh, () -> {
                     ui.loadfrag.show();
@@ -148,6 +149,7 @@ public class MenuFragment{
                     });
                 }).size(200, 60).name("becheck").update(t -> t.getLabel().setColor(becontrol.isUpdateAvailable() ? Tmp.c1.set(Color.white).lerp(Pal.accent, Mathf.absin(5f, 1f)) : Color.white));
             });
+             */
         }
 
         // FIX CURSED MENU SCREEN
