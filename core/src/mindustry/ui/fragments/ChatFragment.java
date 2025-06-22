@@ -13,6 +13,7 @@ import arc.scene.ui.TextField.*;
 import arc.scene.ui.layout.*;
 import arc.struct.*;
 import arc.util.*;
+import kotlin.jvm.internal.Lambda;
 import mindustry.*;
 import mindustry.client.*;
 import mindustry.client.ui.*;
@@ -24,6 +25,7 @@ import mindustry.graphics.*;
 import mindustry.input.*;
 import mindustry.ui.*;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static arc.Core.*;
@@ -358,13 +360,24 @@ public class ChatFragment extends Table{
             if (Core.input.keyDown(Binding.show_copy_message)) {
                 Draw.color();
                 if (!shown) Draw.alpha(Mathf.clamp(fadetime - i, 0, 1) * opacity);
-                float x = offsetx; // + textWidth - layout.height
-                float y = offsety + theight - layout.height;
 //                Icon.copySmall.draw(x, y, layout.height, layout.height);
-                Tmp.r3.set(x, y, layout.width, layout.height);
-                if (Tmp.r3.contains(input.mouse())) {
-                    Core.app.setClipboardText(msg.unformatted);
-                }
+//                Tmp.r3.set(x, y, layout.width, layout.height);
+                msg.addButton(msg.sender != null ? msg.formattedMessage.replace("[coral][[[white]" + msg.sender + "[coral]]:[white]", "").substring(1) : msg.formattedMessage, () -> {
+                    if (!Core.app.getClipboardText().startsWith(msg.unformatted) || msg.sender == null) {
+                        Core.app.setClipboardText(
+                                msg.sender == null ? msg.message : msg.unformatted
+                        );
+                    }
+                });
+            } else {
+                    msg.buttons.each(clickableArea -> {
+                        String text = msg.sender != null ? msg.formattedMessage.replace("[coral][[[white]" + msg.sender + "[coral]]:[white]", "").substring(1) : msg.formattedMessage;
+                        int startAndEnd = msg.formattedMessage.indexOf(text);
+                        if (clickableArea.start == startAndEnd && clickableArea.end == startAndEnd + text.length()) {
+                            msg.buttons.remove(clickableArea);
+                        }
+                    });
+                //}
             }
         }
 
@@ -767,4 +780,14 @@ public class ChatFragment extends Table{
             return valid.get();
         }
     }
+    public static boolean isReallyBlank(String s) {
+        if (s == null) return true;
+        for (int i = 0; i < s.length(); i++) {
+            if (!Character.isWhitespace(s.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
